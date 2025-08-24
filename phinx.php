@@ -18,7 +18,8 @@ return
         ],
         'environments'  => [
             'default_migration_table' => 'phinxlog',
-            'default_database'        => 'development',
+            // PERBAIKAN: Menggunakan default_environment sesuai standar baru
+            'default_environment'     => 'development',
             'development'             => [
                 'adapter' => 'mysql',
                 'host'    => $_ENV['DB_HOST'] ?? 'localhost',

@@ -4,11 +4,9 @@
         <div class="card">
             <div class="card-body">
                 <h3 class="card-title text-center mb-4">Login Sistem ATK</h3>
-                <?php if (!empty($error)) : ?>
-                    <div class="alert alert-danger"><?php echo e($error); ?></div>
-                <?php endif; ?>
-                <form action="<?php echo BASE_URL; ?>/auth/process_login" method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo e($_SESSION['csrf_token']); ?>">
+
+                <!-- Form sekarang tidak memiliki action, akan ditangani oleh JS -->
+                <form id="login-form">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
                         <input type="text" class="form-control" id="username" name="username" required>
@@ -18,7 +16,7 @@
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" <?php if ($is_locked ?? FALSE) echo 'disabled'; ?>>
+                        <button type="submit" class="btn btn-primary">
                             Login
                         </button>
                     </div>

@@ -1,11 +1,14 @@
 <?php
 
-class Auth_model
+require_once APP_PATH . '/core/Model.php';
+
+class Auth_model extends Model
 {
 
     public function getUserByUsername($username)
     {
 
+        // Data dummy. Ganti dengan query database menggunakan prepared statement.
         $users = [
             'admin' => [
                 'id'       => 1,

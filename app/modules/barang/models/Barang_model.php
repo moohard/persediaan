@@ -5,12 +5,19 @@ require_once APP_PATH . '/core/Model.php';
 class Barang_model extends Model
 {
 
-    public function getAll()
+    public function getAllActive()
     {
 
-        $result = $this->db->query("SELECT * FROM tbl_barang ORDER BY nama_barang ASC");
+        $query = "SELECT * FROM tbl_barang WHERE deleted_at IS NULL ORDER BY nama_barang ASC";
 
-        return $result->fetch_all(MYSQLI_ASSOC);
+        return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getAllTrashed()
+    {
+
+        $query = "SELECT * FROM tbl_barang WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
+        return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
 
     public function getById($id)
@@ -19,8 +26,7 @@ class Barang_model extends Model
         $stmt = $this->db->prepare("SELECT * FROM tbl_barang WHERE id_barang = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_assoc();
+        return $stmt->get_result()->fetch_assoc();
     }
 
     public function create($data)
@@ -34,12 +40,8 @@ class Barang_model extends Model
             return [ 'success' => TRUE ];
         } catch (mysqli_sql_exception $e)
         {
-            $error_message = 'Gagal menyimpan data.';
-            if (ENVIRONMENT === 'development')
-            {
-                $error_message .= " Pesan SQL: " . $e->getMessage();
-            }
-            return [ 'success' => FALSE, 'message' => $error_message ];
+            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Gagal menyimpan data.';
+            return [ 'success' => FALSE, 'message' => $msg ];
         }
     }
 
@@ -54,33 +56,33 @@ class Barang_model extends Model
             return [ 'success' => TRUE ];
         } catch (mysqli_sql_exception $e)
         {
-            $error_message = 'Gagal memperbarui data.';
-            if (ENVIRONMENT === 'development')
-            {
-                $error_message .= " Pesan SQL: " . $e->getMessage();
-            }
-            return [ 'success' => FALSE, 'message' => $error_message ];
+            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Gagal memperbarui data.';
+            return [ 'success' => FALSE, 'message' => $msg ];
         }
     }
 
-    public function delete($id)
+    public function softDelete($id)
     {
 
         try
         {
-            $stmt = $this->db->prepare("DELETE FROM tbl_barang WHERE id_barang = ?");
+            $stmt = $this->db->prepare("UPDATE tbl_barang SET deleted_at = NOW() WHERE id_barang = ?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
             return [ 'success' => TRUE ];
         } catch (mysqli_sql_exception $e)
         {
-            $error_message = 'Gagal menghapus data.';
-            if (ENVIRONMENT === 'development')
-            {
-                $error_message .= " Pesan SQL: " . $e->getMessage();
-            }
-            return [ 'success' => FALSE, 'message' => $error_message ];
+            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Gagal menghapus data.';
+            return [ 'success' => FALSE, 'message' => $msg ];
         }
+    }
+
+    public function restore($id)
+    {
+
+        $stmt = $this->db->prepare("UPDATE tbl_barang SET deleted_at = NULL WHERE id_barang = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
     }
 
 }

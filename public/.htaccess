@@ -1,9 +1,14 @@
-# Aktifkan Rewrite Engine
-RewriteEngine On
-# Alihkan ke HTTPS
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-# Alihkan semua request yang bukan file/direktori ke index.php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?/$1 [L]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Alihkan ke HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Arahkan semua request yang BUKAN file atau direktori yang ada
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Alihkan ke index.php, dan biarkan PHP menangani path
+    RewriteRule . index.php [L]
+</IfModule>
