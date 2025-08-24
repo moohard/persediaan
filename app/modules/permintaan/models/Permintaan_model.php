@@ -9,16 +9,32 @@ class Permintaan_model extends Model
     {
 
         $query = "SELECT * FROM v_permintaan_lengkap ORDER BY tanggal_permintaan DESC, id_permintaan DESC";
-        try
-        {
-            $result = $this->db->query($query);
 
-            return $result->fetch_all(MYSQLI_ASSOC);
-        } catch (mysqli_sql_exception $e)
-        {
-            log_query($query, $e->getMessage());
-            return [];
-        }
+        return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getDetailById($id)
+    {
+
+        $data = [];
+        // Ambil data header dari view
+        $stmt_header = $this->db->prepare("SELECT * FROM v_permintaan_lengkap WHERE id_permintaan = ?");
+        $stmt_header->bind_param("i", $id);
+        $stmt_header->execute();
+        $data['header'] = $stmt_header->get_result()->fetch_assoc();
+
+        // Ambil data detail item
+        $stmt_detail = $this->db->prepare("
+            SELECT dp.*, b.nama_barang, b.stok_saat_ini 
+            FROM tbl_detail_permintaan_atk dp
+            JOIN tbl_barang b ON dp.id_barang = b.id_barang
+            WHERE dp.id_permintaan = ?
+        ");
+        $stmt_detail->bind_param("i", $id);
+        $stmt_detail->execute();
+        $data['items'] = $stmt_detail->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        return $data;
     }
 
     public function createPermintaan($catatan, $items, $id_pemohon)
@@ -37,10 +53,7 @@ class Permintaan_model extends Model
             $stmt_header->execute();
 
             $id_permintaan_baru = $this->db->insert_id;
-            if ($id_permintaan_baru === 0)
-            {
-                throw new Exception("Gagal mendapatkan ID permintaan baru.");
-            }
+            if ($id_permintaan_baru === 0) throw new Exception("Gagal membuat header permintaan.");
 
             $stmt_detail = $this->db->prepare(
                 "INSERT INTO tbl_detail_permintaan_atk (id_permintaan, id_barang, jumlah_diminta) VALUES (?, ?, ?)",
@@ -53,16 +66,50 @@ class Permintaan_model extends Model
 
             $this->db->commit();
             return [ 'success' => TRUE ];
-
         } catch (mysqli_sql_exception $e)
         {
             $this->db->rollback();
-            $error_message = 'Terjadi kesalahan saat menyimpan data.';
-            if (ENVIRONMENT === 'development')
+            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Terjadi kesalahan saat menyimpan data.';
+            return [ 'success' => FALSE, 'message' => $msg ];
+        }
+    }
+
+    public function processPermintaan($id, $action, $catatan, $id_penyetuju)
+    {
+
+        $this->db->begin_transaction();
+        try
+        {
+            $new_status = ($action === 'approve') ? 'Disetujui' : 'Ditolak';
+
+            $stmt = $this->db->prepare(
+                "UPDATE tbl_permintaan_atk SET status_permintaan = ?, id_pengguna_penyetuju = ?, tanggal_diproses = NOW(), catatan_penyetuju = ? WHERE id_permintaan = ? AND status_permintaan = 'Diajukan'",
+            );
+            $stmt->bind_param("sisi", $new_status, $id_penyetuju, $catatan, $id);
+            $stmt->execute();
+
+            if ($stmt->affected_rows === 0)
             {
-                $error_message .= " Pesan SQL: " . $e->getMessage();
+                throw new Exception("Permintaan tidak ditemukan atau sudah diproses.");
             }
-            return [ 'success' => FALSE, 'message' => $error_message ];
+
+            // Jika disetujui, update jumlah_disetujui
+            if ($action === 'approve')
+            {
+                $stmt_approve = $this->db->prepare(
+                    "UPDATE tbl_detail_permintaan_atk SET jumlah_disetujui = jumlah_diminta WHERE id_permintaan = ?",
+                );
+                $stmt_approve->bind_param("i", $id);
+                $stmt_approve->execute();
+            }
+
+            $this->db->commit();
+            return [ 'success' => TRUE ];
+        } catch (Exception $e)
+        {
+            $this->db->rollback();
+            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Gagal memproses permintaan.';
+            return [ 'success' => FALSE, 'message' => $msg ];
         }
     }
 

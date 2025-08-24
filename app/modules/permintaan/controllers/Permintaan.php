@@ -21,18 +21,16 @@ class Permintaan extends Controller
     public function index()
     {
 
-        $data['title']      = 'Daftar Permintaan Barang';
-        $data['js_module']  = 'permintaan';
-        $data['permintaan'] = $this->permintaanModel->getAllPermintaan();
+        $data['title']     = 'Daftar Permintaan Barang';
+        $data['js_module'] = 'permintaan';
 
-        // PERBAIKAN: Menggunakan method getAllActive() yang benar
         $barangModel         = $this->model('barang', 'Barang_model');
         $data['barang_list'] = $barangModel->getAllActive();
 
         $this->view('permintaan', 'index_view', $data);
     }
 
-    public function api($method = '')
+    public function api($method = '', $param = '')
     {
 
         header('Content-Type: application/json');
@@ -48,52 +46,47 @@ class Permintaan extends Controller
             return;
         }
 
+        $input = json_decode(file_get_contents('php://input'), TRUE);
+
         switch ($method)
         {
+            case 'getAll':
+                $permintaan = $this->permintaanModel->getAllPermintaan();
+                foreach ($permintaan as &$item)
+                {
+                    $item['id_permintaan_encrypted'] = $this->encryption->encrypt($item['id_permintaan']);
+                }
+                echo json_encode([ 'success' => TRUE, 'data' => $permintaan ]);
+                break;
+
+            case 'getDetail':
+                $id = $this->encryption->decrypt($param);
+                if (!$id)
+                {
+                    http_response_code(400);
+                    echo json_encode([ 'success' => FALSE, 'message' => 'ID Permintaan tidak valid.' ]);
+                    return;
+                }
+                $detail = $this->permintaanModel->getDetailById($id);
+                echo json_encode([ 'success' => TRUE, 'data' => $detail ]);
+                break;
+
             case 'store':
-                $this->store();
+                $this->store($input);
+                break;
+
+            case 'process':
+                $this->process($input);
                 break;
         }
     }
 
-    private function store()
+    private function store($input)
     {
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST')
-        {
-            http_response_code(405);
-            echo json_encode([ 'success' => FALSE, 'message' => 'Method not allowed.' ]);
-            return;
-        }
-
-        $json_data = file_get_contents('php://input');
-        $post_data = json_decode($json_data, TRUE);
-
-        $catatan = $post_data['catatan_pemohon'] ?? '';
-        $items   = $post_data['items'] ?? [];
-        $errors  = [];
-
-        if (empty($catatan))
-        {
-            $errors[] = 'Catatan atau keperluan harus diisi.';
-        }
-        if (empty($items) || !is_array($items))
-        {
-            $errors[] = 'Minimal harus ada satu barang yang diminta.';
-        } else
-        {
-            foreach ($items as $index => $item)
-            {
-                if (empty($item['id_barang']) || !is_numeric($item['id_barang']))
-                {
-                    $errors[] = 'Barang pada baris #' . ($index + 1) . ' tidak valid.';
-                }
-                if (empty($item['jumlah']) || !is_numeric($item['jumlah']) || $item['jumlah'] < 1)
-                {
-                    $errors[] = 'Jumlah untuk barang pada baris #' . ($index + 1) . ' harus diisi dan minimal 1.';
-                }
-            }
-        }
+        $catatan = $input['catatan_pemohon'] ?? '';
+        $items   = $input['items'] ?? [];
+        $errors  = $this->validate_permintaan($catatan, $items);
 
         if (!empty($errors))
         {
@@ -112,6 +105,78 @@ class Permintaan extends Controller
             http_response_code(500);
             echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
         }
+    }
+
+    private function process($input)
+    {
+
+        if ($_SESSION['role'] !== 'pimpinan')
+        {
+            http_response_code(403);
+            echo json_encode([ 'success' => FALSE, 'message' => 'Hanya pimpinan yang dapat memproses permintaan.' ]);
+            return;
+        }
+
+        $id      = $this->encryption->decrypt($input['id']);
+        $action  = $input['action']; // 'approve' or 'reject'
+        $catatan = $input['catatan_penyetuju'] ?? '';
+
+        if (!$id || !in_array($action, [ 'approve', 'reject' ]))
+        {
+            http_response_code(400);
+            echo json_encode([ 'success' => FALSE, 'message' => 'Data tidak valid.' ]);
+            return;
+        }
+
+        $result = $this->permintaanModel->processPermintaan($id, $action, $catatan, $_SESSION['user_id']);
+
+        if ($result['success'])
+        {
+            echo json_encode([ 'success' => TRUE, 'message' => 'Permintaan berhasil diproses.' ]);
+        } else
+        {
+            http_response_code(500);
+            echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
+        }
+    }
+
+    private function validate_permintaan($catatan, $items)
+    {
+
+        $errors = [];
+        if (empty($catatan)) $errors[] = 'Catatan atau keperluan harus diisi.';
+        if (empty($items) || !is_array($items))
+        {
+            $errors[] = 'Minimal harus ada satu barang yang diminta.';
+        } else
+        {
+            $barangModel  = $this->model('barang', 'Barang_model');
+            $unique_items = [];
+            foreach ($items as $index => $item)
+            {
+                if (empty($item['id_barang']) || !is_numeric($item['id_barang']))
+                {
+                    $errors[] = 'Barang pada baris #' . ($index + 1) . ' tidak valid.';
+                }
+                if (empty($item['jumlah']) || !is_numeric($item['jumlah']) || $item['jumlah'] < 1)
+                {
+                    $errors[] = 'Jumlah untuk barang pada baris #' . ($index + 1) . ' harus diisi dan minimal 1.';
+                }
+                // Cek duplikat
+                if (in_array($item['id_barang'], $unique_items))
+                {
+                    $errors[] = 'Barang yang sama tidak boleh diminta lebih dari sekali.';
+                }
+                $unique_items[] = $item['id_barang'];
+                // Cek stok
+                $barang = $barangModel->getById($item['id_barang']);
+                if ($barang && $item['jumlah'] > $barang['stok_saat_ini'])
+                {
+                    $errors[] = "Stok untuk '{$barang['nama_barang']}' tidak mencukupi (tersisa: {$barang['stok_saat_ini']}).";
+                }
+            }
+        }
+        return $errors;
     }
 
 }
