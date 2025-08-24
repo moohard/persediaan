@@ -16,8 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   btnCreatePermintaan.addEventListener("click", function () {
     form.reset();
-    itemList.innerHTML = ""; // Kosongkan list item
-    addRow(); // Tambah satu baris baru
+    itemList.innerHTML = "";
+    addRow();
     modal.show();
   });
 
@@ -31,7 +31,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-
     const items = [];
     const itemBarangSelects = document.querySelectorAll(".item-barang");
     const itemJumlahInputs = document.querySelectorAll(".item-jumlah");
@@ -57,37 +56,22 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    fetch("/permintaan/api/store", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": document
-          .querySelector('meta[name="csrf-token"]')
-          .getAttribute("content"),
-      },
-      body: JSON.stringify(dataToSend),
-    })
+    axios
+      .post("/permintaan/api/store", dataToSend)
       .then((response) => {
-        if (!response.ok) {
-          return response.json().then((err) => {
-            throw err;
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.success) {
+        if (response.data.success) {
           modal.hide();
           Swal.fire({
             icon: "success",
             title: "Berhasil!",
-            text: data.message,
+            text: response.data.message,
           }).then(() => {
-            window.location.reload(); // Muat ulang halaman untuk melihat data baru
+            window.location.reload();
           });
         }
       })
-      .catch((errorData) => {
+      .catch((error) => {
+        let errorData = error.response.data;
         let errorText =
           errorData.message || "Terjadi kesalahan tidak diketahui.";
         if (errorData.errors) {

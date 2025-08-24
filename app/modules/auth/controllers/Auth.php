@@ -19,8 +19,7 @@ class Auth extends Controller
     {
 
         generate_csrf_token();
-        $data['title'] = 'Login';
-        // Menentukan file JS untuk modul ini
+        $data['title']     = 'Login';
         $data['js_module'] = 'auth';
         $this->view('auth', 'login_view', $data);
     }
@@ -30,11 +29,10 @@ class Auth extends Controller
 
         header('Content-Type: application/json');
 
-        // PERBAIKAN: Menggunakan $_SERVER untuk kompatibilitas yang lebih baik
+        // PERBAIKAN: Menggunakan $_SERVER untuk cara yang lebih andal dalam membaca header
         $is_ajax    = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 
-        // Memberikan pesan error yang lebih spesifik
         if (!$is_ajax)
         {
             http_response_code(403);
@@ -70,43 +68,31 @@ class Auth extends Controller
             return;
         }
 
-        // Cek status lockout
         if (isset($_SESSION['lockout_time']) && time() - $_SESSION['lockout_time'] < LOCKOUT_TIME)
         {
             $remaining_time = LOCKOUT_TIME - (time() - $_SESSION['lockout_time']);
             $message        = "Terlalu banyak percobaan. Coba lagi dalam " . ceil($remaining_time / 60) . " menit.";
-            http_response_code(429); // Too Many Requests
+            http_response_code(429);
             echo json_encode([ 'success' => FALSE, 'message' => $message ]);
             return;
         }
-        unset($_SESSION['lockout_time']); // Reset lockout jika waktu sudah lewat
+        unset($_SESSION['lockout_time']);
 
         $input    = json_decode(file_get_contents('php://input'), TRUE);
         $username = $input['username'] ?? '';
         $password = $input['password'] ?? '';
 
-        // --- VALIDASI INPUT SISI SERVER ---
         $errors = [];
-        if (empty($username))
-        {
-            $errors[] = 'Username tidak boleh kosong.';
-        }
-        if (empty($password))
-        {
-            $errors[] = 'Password tidak boleh kosong.';
-        }
-        if (strlen($username) > 50)
-        {
-            $errors[] = 'Username terlalu panjang (maksimal 50 karakter).';
-        }
+        if (empty($username)) $errors[] = 'Username tidak boleh kosong.';
+        if (empty($password)) $errors[] = 'Password tidak boleh kosong.';
+        if (strlen($username) > 50) $errors[] = 'Username terlalu panjang (maksimal 50 karakter).';
 
         if (!empty($errors))
         {
-            http_response_code(422); // Unprocessable Entity
+            http_response_code(422);
             echo json_encode([ 'success' => FALSE, 'message' => 'Validasi gagal!', 'errors' => $errors ]);
             return;
         }
-        // --- AKHIR VALIDASI ---
 
         $authModel = $this->model('auth', 'Auth_model');
         $user      = $authModel->getUserByUsername($username);
@@ -135,7 +121,7 @@ class Auth extends Controller
                 $remaining = MAX_LOGIN_ATTEMPTS - $_SESSION['login_attempts'];
                 $message   = "Username atau password salah. Sisa percobaan: $remaining.";
             }
-            http_response_code(401); // Unauthorized
+            http_response_code(401);
             echo json_encode([ 'success' => FALSE, 'message' => $message ]);
         }
     }

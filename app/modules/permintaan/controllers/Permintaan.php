@@ -11,7 +11,6 @@ class Permintaan extends Controller
     {
 
         parent::__construct();
-        // Semua method di controller ini memerlukan login
         if (!isset($_SESSION['user_id']))
         {
             $this->redirect('/auth');
@@ -19,7 +18,6 @@ class Permintaan extends Controller
         $this->permintaanModel = $this->model('permintaan', 'Permintaan_model');
     }
 
-    // Menampilkan halaman utama daftar permintaan
     public function index()
     {
 
@@ -27,26 +25,25 @@ class Permintaan extends Controller
         $data['js_module']  = 'permintaan';
         $data['permintaan'] = $this->permintaanModel->getAllPermintaan();
 
-        // PERBAIKAN: Gunakan helper model() untuk memuat model dari modul lain
+        // PERBAIKAN: Menggunakan method getAllActive() yang benar
         $barangModel         = $this->model('barang', 'Barang_model');
-        $data['barang_list'] = $barangModel->getAll();
+        $data['barang_list'] = $barangModel->getAllActive();
 
         $this->view('permintaan', 'index_view', $data);
     }
 
-    // Method API untuk menangani request AJAX
     public function api($method = '')
     {
 
         header('Content-Type: application/json');
 
-        // Validasi CSRF untuk AJAX
-        $headers    = getallheaders();
-        $csrf_token = $headers['X-Csrf-Token'] ?? $_POST['csrf_token'] ?? '';
-        if (empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token))
+        $is_ajax    = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+
+        if (!$is_ajax || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token))
         {
             http_response_code(403);
-            echo json_encode([ 'success' => FALSE, 'message' => 'Invalid CSRF Token' ]);
+            echo json_encode([ 'success' => FALSE, 'message' => 'Akses tidak sah.' ]);
 
             return;
         }
@@ -56,14 +53,9 @@ class Permintaan extends Controller
             case 'store':
                 $this->store();
                 break;
-            default:
-                http_response_code(404);
-                echo json_encode([ 'success' => FALSE, 'message' => 'API endpoint not found.' ]);
-                break;
         }
     }
 
-    // Logika untuk menyimpan permintaan baru (dipanggil oleh API)
     private function store()
     {
 
@@ -74,11 +66,9 @@ class Permintaan extends Controller
             return;
         }
 
-        // Ambil data JSON dari body request
         $json_data = file_get_contents('php://input');
         $post_data = json_decode($json_data, TRUE);
 
-        // --- Validasi Input Sisi Server ---
         $catatan = $post_data['catatan_pemohon'] ?? '';
         $items   = $post_data['items'] ?? [];
         $errors  = [];
@@ -107,12 +97,11 @@ class Permintaan extends Controller
 
         if (!empty($errors))
         {
-            http_response_code(400); // Bad Request
+            http_response_code(422);
             echo json_encode([ 'success' => FALSE, 'message' => 'Validasi gagal!', 'errors' => $errors ]);
             return;
         }
 
-        // Jika validasi lolos, simpan ke database
         $result = $this->permintaanModel->createPermintaan($catatan, $items, $_SESSION['user_id']);
 
         if ($result['success'])
@@ -120,7 +109,7 @@ class Permintaan extends Controller
             echo json_encode([ 'success' => TRUE, 'message' => 'Permintaan berhasil diajukan!' ]);
         } else
         {
-            http_response_code(500); // Internal Server Error
+            http_response_code(500);
             echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
         }
     }

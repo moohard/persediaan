@@ -8,33 +8,25 @@ class Permintaan_model extends Model
     public function getAllPermintaan()
     {
 
-        // Query ini menggabungkan beberapa tabel untuk mendapatkan informasi lengkap
-        $query  = "
-            SELECT 
-                p.id_permintaan,
-                p.kode_permintaan,
-                p.tanggal_permintaan,
-                p.status_permintaan,
-                pemohon.nama_lengkap AS nama_pemohon,
-                (SELECT COUNT(*) FROM tbl_detail_permintaan_atk dp WHERE dp.id_permintaan = p.id_permintaan) AS jumlah_item
-            FROM tbl_permintaan_atk p
-            JOIN tbl_pengguna pemohon ON p.id_pengguna_pemohon = pemohon.id_pengguna
-            ORDER BY p.tanggal_permintaan DESC, p.id_permintaan DESC
-        ";
-        $result = $this->db->query($query);
+        $query = "SELECT * FROM v_permintaan_lengkap ORDER BY tanggal_permintaan DESC, id_permintaan DESC";
+        try
+        {
+            $result = $this->db->query($query);
 
-        return $result->fetch_all(MYSQLI_ASSOC);
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (mysqli_sql_exception $e)
+        {
+            log_query($query, $e->getMessage());
+            return [];
+        }
     }
 
     public function createPermintaan($catatan, $items, $id_pemohon)
     {
 
-        // Gunakan transaksi untuk memastikan semua query berhasil atau semua gagal
         $this->db->begin_transaction();
-
         try
         {
-            // 1. Buat header permintaan
             $kode_permintaan    = 'REQ-' . date('Ymd') . '-' . time();
             $tanggal_permintaan = date('Y-m-d');
 
@@ -50,7 +42,6 @@ class Permintaan_model extends Model
                 throw new Exception("Gagal mendapatkan ID permintaan baru.");
             }
 
-            // 2. Masukkan setiap item ke detail permintaan
             $stmt_detail = $this->db->prepare(
                 "INSERT INTO tbl_detail_permintaan_atk (id_permintaan, id_barang, jumlah_diminta) VALUES (?, ?, ?)",
             );
@@ -60,21 +51,17 @@ class Permintaan_model extends Model
                 $stmt_detail->execute();
             }
 
-            // Jika semua berhasil, commit transaksi
             $this->db->commit();
             return [ 'success' => TRUE ];
 
         } catch (mysqli_sql_exception $e)
         {
             $this->db->rollback();
-
             $error_message = 'Terjadi kesalahan saat menyimpan data.';
-            // PERBAIKAN: Berikan pesan error yang lebih detail di mode development
             if (ENVIRONMENT === 'development')
             {
                 $error_message .= " Pesan SQL: " . $e->getMessage();
             }
-
             return [ 'success' => FALSE, 'message' => $error_message ];
         }
     }
