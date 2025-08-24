@@ -47,7 +47,7 @@ class Permintaan_model extends Model
             $id_permintaan_baru = $this->db->insert_id;
             if ($id_permintaan_baru === 0)
             {
-                throw new Exception("Gagal membuat header permintaan.");
+                throw new Exception("Gagal mendapatkan ID permintaan baru.");
             }
 
             // 2. Masukkan setiap item ke detail permintaan
@@ -62,21 +62,21 @@ class Permintaan_model extends Model
 
             // Jika semua berhasil, commit transaksi
             $this->db->commit();
-            return TRUE;
+            return [ 'success' => TRUE ];
 
         } catch (mysqli_sql_exception $e)
         {
-            // PERBAIKAN: Tangkap exception SQL secara spesifik
             $this->db->rollback();
-            // Di mode development, log atau tampilkan error yang lebih detail
+
+            $error_message = 'Terjadi kesalahan saat menyimpan data.';
+            // PERBAIKAN: Berikan pesan error yang lebih detail di mode development
             if (ENVIRONMENT === 'development')
             {
-                error_log("Database Error: " . $e->getMessage());
+                $error_message .= " Pesan SQL: " . $e->getMessage();
             }
-            return FALSE;
+
+            return [ 'success' => FALSE, 'message' => $error_message ];
         }
     }
 
 }
-
-?>

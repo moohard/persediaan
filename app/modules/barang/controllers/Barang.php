@@ -27,7 +27,6 @@ class Barang extends Controller
         $this->view('barang', 'index_view', $data);
     }
 
-    // Metode API untuk AJAX
     public function api($method = '', $param = '')
     {
 
@@ -65,12 +64,13 @@ class Barang extends Controller
                     'jenis_barang' => $_POST['jenis_barang'],
                     'stok'         => (int) $_POST['stok']
                 ];
-                if ($this->barangModel->create($data))
+                $result = $this->barangModel->create($data);
+                if ($result['success'])
                 {
                     echo json_encode([ 'success' => TRUE, 'message' => 'Data berhasil ditambahkan.' ]);
                 } else
                 {
-                    echo json_encode([ 'success' => FALSE, 'message' => 'Gagal menambahkan data.' ]);
+                    echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
                 }
                 break;
 
@@ -82,23 +82,25 @@ class Barang extends Controller
                     'jenis_barang' => $_POST['jenis_barang'],
                     'stok'         => (int) $_POST['stok']
                 ];
-                if ($this->barangModel->update($data['id'], $data))
+                $result = $this->barangModel->update($data['id'], $data);
+                if ($result['success'])
                 {
                     echo json_encode([ 'success' => TRUE, 'message' => 'Data berhasil diperbarui.' ]);
                 } else
                 {
-                    echo json_encode([ 'success' => FALSE, 'message' => 'Gagal memperbarui data.' ]);
+                    echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
                 }
                 break;
 
             case 'delete':
                 $id = $this->encryption->decrypt($_POST['id']);
-                if ($this->barangModel->delete($id))
+                $result = $this->barangModel->delete($id);
+                if ($result['success'])
                 {
                     echo json_encode([ 'success' => TRUE, 'message' => 'Data berhasil dihapus.' ]);
                 } else
                 {
-                    echo json_encode([ 'success' => FALSE, 'message' => 'Gagal menghapus data.' ]);
+                    echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
                 }
                 break;
         }

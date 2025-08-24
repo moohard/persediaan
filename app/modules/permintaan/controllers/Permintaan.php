@@ -115,16 +115,14 @@ class Permintaan extends Controller
         // Jika validasi lolos, simpan ke database
         $result = $this->permintaanModel->createPermintaan($catatan, $items, $_SESSION['user_id']);
 
-        if ($result)
+        if ($result['success'])
         {
             echo json_encode([ 'success' => TRUE, 'message' => 'Permintaan berhasil diajukan!' ]);
         } else
         {
             http_response_code(500); // Internal Server Error
-            echo json_encode([ 'success' => FALSE, 'message' => 'Terjadi kesalahan saat menyimpan data.' ]);
+            echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
         }
     }
 
 }
-
-?>

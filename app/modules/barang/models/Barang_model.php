@@ -26,25 +26,61 @@ class Barang_model extends Model
     public function create($data)
     {
 
-        $stmt = $this->db->prepare("INSERT INTO tbl_barang (kode_barang, nama_barang, jenis_barang, stok_saat_ini, id_kategori, id_satuan) VALUES (?, ?, ?, ?, 1, 1)");
-        $stmt->bind_param("sssi", $data['kode_barang'], $data['nama_barang'], $data['jenis_barang'], $data['stok']);
-        return $stmt->execute();
+        try
+        {
+            $stmt = $this->db->prepare("INSERT INTO tbl_barang (kode_barang, nama_barang, jenis_barang, stok_saat_ini, id_kategori, id_satuan) VALUES (?, ?, ?, ?, 1, 1)");
+            $stmt->bind_param("sssi", $data['kode_barang'], $data['nama_barang'], $data['jenis_barang'], $data['stok']);
+            $stmt->execute();
+            return [ 'success' => TRUE ];
+        } catch (mysqli_sql_exception $e)
+        {
+            $error_message = 'Gagal menyimpan data.';
+            if (ENVIRONMENT === 'development')
+            {
+                $error_message .= " Pesan SQL: " . $e->getMessage();
+            }
+            return [ 'success' => FALSE, 'message' => $error_message ];
+        }
     }
 
     public function update($id, $data)
     {
 
-        $stmt = $this->db->prepare("UPDATE tbl_barang SET kode_barang = ?, nama_barang = ?, jenis_barang = ?, stok_saat_ini = ? WHERE id_barang = ?");
-        $stmt->bind_param("sssii", $data['kode_barang'], $data['nama_barang'], $data['jenis_barang'], $data['stok'], $id);
-        return $stmt->execute();
+        try
+        {
+            $stmt = $this->db->prepare("UPDATE tbl_barang SET kode_barang = ?, nama_barang = ?, jenis_barang = ?, stok_saat_ini = ? WHERE id_barang = ?");
+            $stmt->bind_param("sssii", $data['kode_barang'], $data['nama_barang'], $data['jenis_barang'], $data['stok'], $id);
+            $stmt->execute();
+            return [ 'success' => TRUE ];
+        } catch (mysqli_sql_exception $e)
+        {
+            $error_message = 'Gagal memperbarui data.';
+            if (ENVIRONMENT === 'development')
+            {
+                $error_message .= " Pesan SQL: " . $e->getMessage();
+            }
+            return [ 'success' => FALSE, 'message' => $error_message ];
+        }
     }
 
     public function delete($id)
     {
 
-        $stmt = $this->db->prepare("DELETE FROM tbl_barang WHERE id_barang = ?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        try
+        {
+            $stmt = $this->db->prepare("DELETE FROM tbl_barang WHERE id_barang = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            return [ 'success' => TRUE ];
+        } catch (mysqli_sql_exception $e)
+        {
+            $error_message = 'Gagal menghapus data.';
+            if (ENVIRONMENT === 'development')
+            {
+                $error_message .= " Pesan SQL: " . $e->getMessage();
+            }
+            return [ 'success' => FALSE, 'message' => $error_message ];
+        }
     }
 
 }

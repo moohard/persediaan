@@ -1,10 +1,8 @@
 <?php require_once APP_PATH . '/views/templates/header.php'; ?>
-
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3><?php echo e($title); ?></h3>
     <button id="btn-add-barang" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Tambah Barang</button>
 </div>
-
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -18,14 +16,11 @@
                         <th style="width: 20%;">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="barang-table-body">
-                    <!-- Data akan dimuat oleh AJAX -->
-                </tbody>
+                <tbody id="barang-table-body"></tbody>
             </table>
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="barang-modal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -64,5 +59,4 @@
         </div>
     </div>
 </div>
-
 <?php require_once APP_PATH . '/views/templates/footer.php'; ?>

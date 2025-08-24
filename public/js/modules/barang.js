@@ -13,32 +13,31 @@ $(document).ready(function () {
         if (response.data.length > 0) {
           response.data.forEach((item) => {
             html += `
-<tr>
-    <td>${item.kode_barang}</td>
-    <td>${item.nama_barang}</td>
-    <td><span class="badge bg-secondary">${item.jenis_barang.replace(
-      "_",
-      " "
-    )}</span></td>
-    <td>${item.stok_saat_ini}</td>
-    <td>
-        <a href="/kartustok/index/${
-          item.id_barang_encrypted
-        }" class="btn btn-sm btn-success">Log</a>
-        <button class="btn btn-sm btn-warning btn-edit" data-id="${
-          item.id_barang_encrypted
-        }">Edit</button>
-        <button class="btn btn-sm btn-danger btn-delete" data-id="${
-          item.id_barang_encrypted
-        }">Hapus</button>
-    </td>
-</tr>
-`;
+                            <tr>
+                                <td>${item.kode_barang}</td>
+                                <td>${item.nama_barang}</td>
+                                <td><span class="badge bg-secondary">${item.jenis_barang.replace(
+                                  "_",
+                                  " "
+                                )}</span></td>
+                                <td>${item.stok_saat_ini}</td>
+                                <td>
+                                    <a href="/kartustok/index/${
+                                      item.id_barang_encrypted
+                                    }" class="btn btn-sm btn-success">Log</a>
+                                    <button class="btn btn-sm btn-warning btn-edit" data-id="${
+                                      item.id_barang_encrypted
+                                    }">Edit</button>
+                                    <button class="btn btn-sm btn-danger btn-delete" data-id="${
+                                      item.id_barang_encrypted
+                                    }">Hapus</button>
+                                </td>
+                            </tr>
+                        `;
           });
         } else {
-          html = `<tr>
-    <td colspan="5" class="text-center">Belum ada data.</td>
-</tr>`;
+          html =
+            '<tr><td colspan="5" class="text-center">Belum ada data.</td></tr>';
         }
         $("#barang-table-body").html(html);
       },
@@ -80,7 +79,6 @@ $(document).ready(function () {
     e.preventDefault();
     const url = $(this).attr("action");
     let formData = $(this).serializeArray();
-    // Tambahkan CSRF Token ke data form
     formData.push({
       name: "csrf_token",
       value: $('meta[name="csrf-token"]').attr("content"),
