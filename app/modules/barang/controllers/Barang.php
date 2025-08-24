@@ -23,97 +23,85 @@ class Barang extends Controller
     {
 
         $data['title']     = 'Manajemen Data Barang';
-        $data['barang']    = $this->barangModel->getAll();
         $data['js_module'] = 'barang';
         $this->view('barang', 'index_view', $data);
     }
 
-    public function create()
+    // Metode API untuk AJAX
+    public function api($method = '', $param = '')
     {
 
-        $data['title'] = 'Tambah Barang Baru';
-        $this->view('barang', 'create_view', $data);
-    }
+        header('Content-Type: application/json');
 
-    public function store()
-    {
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('/barang');
-        verify_csrf_token();
-
-        $data = [
-            'kode_barang'  => $_POST['kode_barang'],
-            'nama_barang'  => $_POST['nama_barang'],
-            'jenis_barang' => $_POST['jenis_barang'],
-            'stok'         => (int) $_POST['stok']
-        ];
-
-        if ($this->barangModel->create($data))
+        $headers = getallheaders();
+        if (!isset($headers['X-Csrf-Token']) || !hash_equals($_SESSION['csrf_token'], $headers['X-Csrf-Token']))
         {
-            set_flash_message('success', 'Data barang berhasil ditambahkan.');
-        } else
-        {
-            set_flash_message('danger', 'Gagal menambahkan data barang.');
+            echo json_encode([ 'success' => FALSE, 'message' => 'Invalid CSRF Token' ]);
+
+            return;
         }
-        $this->redirect('/barang');
-    }
 
-    public function edit($encrypted_id)
-    {
-
-        $id = $this->encryption->decrypt($encrypted_id);
-        if (!$id) die('ID tidak valid.');
-
-        $data['title'] = 'Edit Data Barang';
-        $data['item']  = $this->barangModel->getById($id);
-        if (!$data['item']) die('Barang tidak ditemukan.');
-
-        $this->view('barang', 'edit_view', $data);
-    }
-
-    public function update()
-    {
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('/barang');
-        verify_csrf_token();
-
-        $id = $this->encryption->decrypt($_POST['id']);
-        if (!$id) die('ID tidak valid.');
-
-        $data = [
-            'kode_barang'  => $_POST['kode_barang'],
-            'nama_barang'  => $_POST['nama_barang'],
-            'jenis_barang' => $_POST['jenis_barang'],
-            'stok'         => (int) $_POST['stok']
-        ];
-
-        if ($this->barangModel->update($id, $data))
+        switch ($method)
         {
-            set_flash_message('success', 'Data barang berhasil diperbarui.');
-        } else
-        {
-            set_flash_message('danger', 'Gagal memperbarui data barang.');
+            case 'getAll':
+                $barang = $this->barangModel->getAll();
+                foreach ($barang as &$item)
+                {
+                    $item['id_barang_encrypted'] = $this->encryption->encrypt($item['id_barang']);
+                }
+                echo json_encode([ 'success' => TRUE, 'data' => $barang ]);
+                break;
+
+            case 'getById':
+                $id = $this->encryption->decrypt($param);
+                $item = $this->barangModel->getById($id);
+                echo json_encode([ 'success' => TRUE, 'data' => $item ]);
+                break;
+
+            case 'create':
+                $data = [
+                    'kode_barang'  => $_POST['kode_barang'],
+                    'nama_barang'  => $_POST['nama_barang'],
+                    'jenis_barang' => $_POST['jenis_barang'],
+                    'stok'         => (int) $_POST['stok']
+                ];
+                if ($this->barangModel->create($data))
+                {
+                    echo json_encode([ 'success' => TRUE, 'message' => 'Data berhasil ditambahkan.' ]);
+                } else
+                {
+                    echo json_encode([ 'success' => FALSE, 'message' => 'Gagal menambahkan data.' ]);
+                }
+                break;
+
+            case 'update':
+                $data = [
+                    'id'           => $this->encryption->decrypt($_POST['id']),
+                    'kode_barang'  => $_POST['kode_barang'],
+                    'nama_barang'  => $_POST['nama_barang'],
+                    'jenis_barang' => $_POST['jenis_barang'],
+                    'stok'         => (int) $_POST['stok']
+                ];
+                if ($this->barangModel->update($data['id'], $data))
+                {
+                    echo json_encode([ 'success' => TRUE, 'message' => 'Data berhasil diperbarui.' ]);
+                } else
+                {
+                    echo json_encode([ 'success' => FALSE, 'message' => 'Gagal memperbarui data.' ]);
+                }
+                break;
+
+            case 'delete':
+                $id = $this->encryption->decrypt($_POST['id']);
+                if ($this->barangModel->delete($id))
+                {
+                    echo json_encode([ 'success' => TRUE, 'message' => 'Data berhasil dihapus.' ]);
+                } else
+                {
+                    echo json_encode([ 'success' => FALSE, 'message' => 'Gagal menghapus data.' ]);
+                }
+                break;
         }
-        $this->redirect('/barang');
-    }
-
-    public function destroy()
-    {
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('/barang');
-        verify_csrf_token();
-
-        $id = $this->encryption->decrypt($_POST['id']);
-        if (!$id) die('ID tidak valid.');
-
-        if ($this->barangModel->delete($id))
-        {
-            set_flash_message('success', 'Data barang berhasil dihapus.');
-        } else
-        {
-            set_flash_message('danger', 'Gagal menghapus data barang.');
-        }
-        $this->redirect('/barang');
     }
 
 }

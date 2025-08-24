@@ -8,14 +8,23 @@ class Model
     public function __construct()
     {
 
-        $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-        if ($this->db->connect_error)
+        // PERBAIKAN: Aktifkan mode exception untuk mysqli agar error database bisa ditangkap
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+        try
         {
+            $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+            $this->db->set_charset('utf8mb4'); // Set charset untuk praktik terbaik
+        } catch (mysqli_sql_exception $e)
+        {
+            // Jangan tampilkan detail error di mode production
             if (ENVIRONMENT === 'development')
             {
-                die("Koneksi database gagal: " . $this->db->connect_error);
+                die("Koneksi database gagal: " . $e->getMessage());
             } else
             {
+                // Catat error ke log server di mode production
+                error_log("Database connection error: " . $e->getMessage());
                 die("Tidak dapat terhubung ke server database.");
             }
         }
@@ -28,3 +37,5 @@ class Model
     }
 
 }
+
+?>
