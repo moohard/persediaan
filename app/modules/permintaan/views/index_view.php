@@ -14,6 +14,7 @@
                     <tr>
                         <th>Kode Permintaan</th>
                         <th>Tanggal</th>
+                        <th>Tipe</th>
                         <th>Pemohon</th>
                         <th>Jumlah Item</th>
                         <th>Status</th>
@@ -38,6 +39,11 @@
             </div>
             <form id="form-permintaan">
                 <div class="modal-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="is_pembelian">
+                        <label class="form-check-label" for="is_pembelian">Ajukan sebagai Permintaan Pembelian (untuk
+                            barang baru/habis)</label>
+                    </div>
                     <div class="mb-3">
                         <label for="catatan_pemohon" class="form-label">Catatan / Keperluan</label>
                         <textarea class="form-control" id="catatan_pemohon" name="catatan_pemohon" rows="3"
@@ -66,12 +72,8 @@
                 <h5 class="modal-title">Detail Permintaan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="detail-modal-body">
-                <!-- Konten detail dimuat oleh AJAX -->
-            </div>
-            <div class="modal-footer" id="detail-modal-footer">
-                <!-- Tombol aksi dimuat oleh AJAX -->
-            </div>
+            <div class="modal-body" id="detail-modal-body"></div>
+            <div class="modal-footer" id="detail-modal-footer"></div>
         </div>
     </div>
 </div>
@@ -81,7 +83,7 @@
         <div class="col-md-7">
             <select class="form-select item-barang" required>
                 <option value="">-- Pilih Barang --</option>
-                <?php foreach ($barang_list as $barang) : ?>
+                <?php foreach ($barang_list as $barang): ?>
                     <option value="<?php echo e($barang['id_barang']); ?>"
                         data-stok="<?php echo e($barang['stok_saat_ini']); ?>"><?php echo e($barang['nama_barang']); ?>
                         (Stok: <?php echo e($barang['stok_saat_ini']); ?>)</option>
