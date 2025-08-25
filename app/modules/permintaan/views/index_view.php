@@ -80,18 +80,25 @@
 
 <template id="item-row-template">
     <div class="row mb-2 item-row align-items-center">
-        <div class="col-md-7">
+        <div class="col-md-5">
             <select class="form-select item-barang" required>
                 <option value="">-- Pilih Barang --</option>
                 <?php foreach ($barang_list as $barang): ?>
-                    <option value="<?php echo e($barang['id_barang']); ?>"
-                        data-stok="<?php echo e($barang['stok_saat_ini']); ?>"><?php echo e($barang['nama_barang']); ?>
-                        (Stok: <?php echo e($barang['stok_saat_ini']); ?>)</option>
+                <option value="<?php echo e($barang['id_barang']); ?>"
+                    data-stok="<?php echo e($barang['stok_saat_ini']); ?>"><?php echo e($barang['nama_barang']); ?>
+                    (Stok: <?php echo e($barang['stok_saat_ini']); ?>)</option>
                 <?php endforeach; ?>
             </select>
+            <input type="text" class="form-control item-barang-custom d-none" placeholder="Nama Barang Baru" required>
         </div>
         <div class="col-md-3">
             <input type="number" class="form-control item-jumlah" placeholder="Jumlah" min="1" required>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check">
+                <input class="form-check-input item-is-custom" type="checkbox">
+                <label class="form-check-label">Baru</label>
+            </div>
         </div>
         <div class="col-md-2">
             <button type="button" class="btn btn-danger btn-remove-item"><i class="bi bi-trash"></i></button>
