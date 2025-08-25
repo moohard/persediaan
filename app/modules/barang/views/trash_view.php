@@ -17,30 +17,30 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($barang)) : ?>
-                    <tr>
-                        <td colspan="4" class="text-center">Tidak ada data di sampah.</td>
-                    </tr>
-                <?php else : ?>
-                    <?php foreach ($barang as $item) : ?>
-                        <tr>
-                            <td><?php echo e($item['nama_barang']); ?></td>
-                            <td><span
-                                    class="badge bg-secondary"><?php echo e(ucwords(str_replace('_', ' ', $item['jenis_barang']))); ?></span>
-                            </td>
-                            <td><?php echo e(date('d M Y, H:i', strtotime($item['deleted_at']))); ?></td>
-                            <td>
-                                <form action="/barang/restore" method="POST" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="<?php echo e($_SESSION['csrf_token']); ?>">
-                                    <input type="hidden" name="id"
-                                        value="<?php echo e($encryption->encrypt($item['id_barang'])); ?>">
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Pulihkan
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
+                <?php if (empty($barang)): ?>
+                <tr>
+                    <td colspan="4" class="text-center">Tidak ada data di sampah.</td>
+                </tr>
+                <?php else: ?>
+                <?php foreach ($barang as $item): ?>
+                <tr>
+                    <td><?php echo e($item['nama_barang']); ?></td>
+                    <td><span
+                            class="badge bg-secondary"><?php echo e(ucwords(str_replace('_', ' ', $item['jenis_barang']))); ?></span>
+                    </td>
+                    <td><?php echo e(date('d M Y, H:i', strtotime($item['deleted_at']))); ?></td>
+                    <td>
+                        <form action="/barang/restore" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="<?php echo e($_SESSION['csrf_token']); ?>">
+                            <input type="hidden" name="id"
+                                value="<?php echo e($encryption->encrypt($item['id_barang'])); ?>">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-arrow-counterclockwise"></i> Pulihkan
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
         </table>

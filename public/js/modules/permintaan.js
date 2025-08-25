@@ -61,41 +61,48 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnAddItem.addEventListener('click', addRow);
+
   itemList.addEventListener('click', e => {
-    if (e.target && e.target.closest('.btn-remove-item')) {
+    if (e.target.classList.contains('btn-remove-item')) {
       e.target.closest('.item-row').remove();
+    }
+    if (e.target.classList.contains('item-is-custom')) {
+      const row = e.target.closest('.item-row');
+      const selectEl = row.querySelector('.item-barang');
+      const inputEl = row.querySelector('.item-barang-custom');
+      if (e.target.checked) {
+        selectEl.classList.add('d-none');
+        selectEl.removeAttribute('required');
+        inputEl.classList.remove('d-none');
+        inputEl.setAttribute('required', 'required');
+      } else {
+        selectEl.classList.remove('d-none');
+        selectEl.setAttribute('required', 'required');
+        inputEl.classList.add('d-none');
+        inputEl.removeAttribute('required');
+      }
     }
   });
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const items = [];
-    const selectedItems = new Set();
-    let hasError = false;
     const isPembelian = document.getElementById('is_pembelian').checked;
 
     document.querySelectorAll('.item-row').forEach(row => {
-      const barangSelect = row.querySelector('.item-barang');
-      const jumlahInput = row.querySelector('.item-jumlah');
-      const selectedOption = barangSelect.options[barangSelect.selectedIndex];
-      const stok = parseInt(selectedOption.dataset.stok, 10);
-      const jumlah = parseInt(jumlahInput.value, 10);
+      const isCustom = row.querySelector('.item-is-custom').checked;
+      const jumlah = row.querySelector('.item-jumlah').value;
+      let itemData = { jumlah: jumlah, is_custom: isCustom };
 
-      if (selectedItems.has(barangSelect.value)) {
-        Swal.fire('Error', 'Barang yang sama tidak boleh dipilih lebih dari sekali.', 'error');
-        hasError = true;
-        return;
+      if (isCustom) {
+        itemData.nama_barang_custom = row.querySelector('.item-barang-custom').value;
+        itemData.id_barang = null;
+      } else {
+        itemData.id_barang = row.querySelector('.item-barang').value;
+        itemData.nama_barang_custom = null;
       }
-      if (!isPembelian && jumlah > stok) {
-        Swal.fire('Error', `Stok untuk ${selectedOption.text.split(' (')[0]} tidak mencukupi.`, 'error');
-        hasError = true;
-        return;
-      }
-      selectedItems.add(barangSelect.value);
-      items.push({ id_barang: barangSelect.value, jumlah: jumlah });
+      items.push(itemData);
     });
-
-    if (hasError) return;
 
     const dataToSend = {
       catatan_pemohon: document.getElementById('catatan_pemohon').value,
@@ -150,9 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
       items.forEach(item => {
         const isDiajukan = header.status_permintaan === 'Diajukan';
+        const itemName = item.id_barang ? item.nama_barang : `<i>${item.nama_barang_custom} (Barang Baru)</i>`;
         detailHtml += `
                     <tr>
-                        <td>${item.nama_barang}</td>
+                        <td>${itemName}</td>
                         <td>${item.jumlah_diminta}</td>
                         <td>
                             ${isDiajukan ?

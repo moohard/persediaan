@@ -1,117 +1,109 @@
-<?php
-require_once APP_PATH . '/core/Model.php';
+<?php require_once APP_PATH . '/views/templates/header.php'; ?>
 
-class Permintaan_model extends Model
-    {
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><?php echo e($title); ?></h3>
+    <button id="btn-create-permintaan" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Buat Permintaan
+        Baru</button>
+</div>
 
-    public function getAllPermintaan()
-        {
-        // PERBAIKAN: Menambahkan kolom `tipe_permintaan` ke dalam query
-        $query  = "
-            SELECT 
-                p.id_permintaan,
-                p.kode_permintaan,
-                p.tanggal_permintaan,
-                p.tipe_permintaan,
-                p.status_permintaan,
-                pemohon.nama_lengkap AS nama_pemohon,
-                (SELECT COUNT(*) FROM tbl_detail_permintaan_atk dp WHERE dp.id_permintaan = p.id_permintaan) AS jumlah_item
-            FROM tbl_permintaan_atk p
-            JOIN tbl_pengguna pemohon ON p.id_pengguna_pemohon = pemohon.id_pengguna
-            ORDER BY p.tanggal_permintaan DESC, p.id_permintaan DESC
-        ";
-        $result = $this->db->query($query);
-        return $result->fetch_all(MYSQLI_ASSOC);
-        }
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Kode Permintaan</th>
+                        <th>Tanggal</th>
+                        <th>Tipe</th>
+                        <th>Pemohon</th>
+                        <th>Jumlah Item</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="permintaan-table-body">
+                    <!-- Data dimuat oleh AJAX -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-    public function getDetailById($id)
-        {
-        $data        = [];
-        $stmt_header = $this->db->prepare("SELECT * FROM v_permintaan_lengkap WHERE id_permintaan = ?");
-        $stmt_header->bind_param("i", $id);
-        $stmt_header->execute();
-        $data['header'] = $stmt_header->get_result()->fetch_assoc();
+<!-- Modal untuk Membuat Permintaan -->
+<div class="modal fade" id="permintaan-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Form Permintaan Barang Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-permintaan">
+                <div class="modal-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="is_pembelian">
+                        <label class="form-check-label" for="is_pembelian">Ajukan sebagai Permintaan Pembelian (untuk
+                            barang baru/habis)</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="catatan_pemohon" class="form-label">Catatan / Keperluan</label>
+                        <textarea class="form-control" id="catatan_pemohon" name="catatan_pemohon" rows="3"
+                            required></textarea>
+                    </div>
+                    <hr>
+                    <h6>Item Barang yang Diminta</h6>
+                    <div id="item-list"></div>
+                    <button type="button" id="btn-add-item" class="btn btn-sm btn-outline-success mt-2"><i
+                            class="bi bi-plus"></i> Tambah Baris</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Ajukan Permintaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-        $stmt_detail = $this->db->prepare("
-            SELECT dp.*, b.nama_barang, b.stok_saat_ini 
-            FROM tbl_detail_permintaan_atk dp
-            JOIN tbl_barang b ON dp.id_barang = b.id_barang
-            WHERE dp.id_permintaan = ?
-        ");
-        $stmt_detail->bind_param("i", $id);
-        $stmt_detail->execute();
-        $data['items'] = $stmt_detail->get_result()->fetch_all(MYSQLI_ASSOC);
+<!-- Modal untuk Detail Permintaan -->
+<div class="modal fade" id="detail-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Permintaan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detail-modal-body"></div>
+            <div class="modal-footer" id="detail-modal-footer"></div>
+        </div>
+    </div>
+</div>
 
-        return $data;
-        }
+<template id="item-row-template">
+    <div class="row mb-2 item-row align-items-center">
+        <div class="col-md-5">
+            <select class="form-select item-barang" required>
+                <option value="">-- Pilih Barang --</option>
+                <?php foreach ($barang_list as $barang): ?>
+                    <option value="<?php echo e($barang['id_barang']); ?>"
+                        data-stok="<?php echo e($barang['stok_saat_ini']); ?>"><?php echo e($barang['nama_barang']); ?>
+                        (Stok: <?php echo e($barang['stok_saat_ini']); ?>)</option>
+                <?php endforeach; ?>
+            </select>
+            <input type="text" class="form-control item-barang-custom d-none" placeholder="Nama Barang Baru" required>
+        </div>
+        <div class="col-md-3">
+            <input type="number" class="form-control item-jumlah" placeholder="Jumlah" min="1" required>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check">
+                <input class="form-check-input item-is-custom" type="checkbox">
+                <label class="form-check-label">Baru</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-danger btn-remove-item"><i class="bi bi-trash"></i></button>
+        </div>
+    </div>
+</template>
 
-    public function createPermintaan($catatan, $items, $id_pemohon, $tipe_permintaan)
-        {
-        $this->db->begin_transaction();
-        try {
-            $kode_permintaan    = 'REQ-' . date('Ymd') . '-' . time();
-            $tanggal_permintaan = date('Y-m-d');
-
-            $stmt_header = $this->db->prepare(
-                "INSERT INTO tbl_permintaan_atk (kode_permintaan, id_pengguna_pemohon, tanggal_permintaan, tipe_permintaan, catatan_pemohon) VALUES (?, ?, ?, ?, ?)",
-            );
-            $stmt_header->bind_param("sisss", $kode_permintaan, $id_pemohon, $tanggal_permintaan, $tipe_permintaan, $catatan);
-            $stmt_header->execute();
-
-            $id_permintaan_baru = $this->db->insert_id;
-            if ($id_permintaan_baru === 0) throw new Exception("Gagal membuat header permintaan.");
-
-            $stmt_detail = $this->db->prepare(
-                "INSERT INTO tbl_detail_permintaan_atk (id_permintaan, id_barang, jumlah_diminta) VALUES (?, ?, ?)",
-            );
-            foreach ($items as $item) {
-                $stmt_detail->bind_param("iii", $id_permintaan_baru, $item['id_barang'], $item['jumlah']);
-                $stmt_detail->execute();
-                }
-
-            $this->db->commit();
-            return ['success' => TRUE];
-            }
-        catch (mysqli_sql_exception $e) {
-            $this->db->rollback();
-            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Terjadi kesalahan saat menyimpan data.';
-            return ['success' => FALSE, 'message' => $msg];
-            }
-        }
-
-    public function processPermintaan($id, $action, $catatan, $id_penyetuju, $items = [])
-        {
-        $this->db->begin_transaction();
-        try {
-            $new_status = ($action === 'approve') ? 'Disetujui' : 'Ditolak';
-
-            $stmt = $this->db->prepare(
-                "UPDATE tbl_permintaan_atk SET status_permintaan = ?, id_pengguna_penyetuju = ?, tanggal_diproses = NOW(), catatan_penyetuju = ? WHERE id_permintaan = ? AND status_permintaan = 'Diajukan'",
-            );
-            $stmt->bind_param("sisi", $new_status, $id_penyetuju, $catatan, $id);
-            $stmt->execute();
-
-            if ($stmt->affected_rows === 0) {
-                throw new Exception("Permintaan tidak ditemukan atau sudah diproses.");
-                }
-
-            if ($action === 'approve') {
-                $stmt_approve = $this->db->prepare(
-                    "UPDATE tbl_detail_permintaan_atk SET jumlah_disetujui = ? WHERE id_detail_permintaan = ?",
-                );
-                foreach ($items as $item) {
-                    $stmt_approve->bind_param("ii", $item['jumlah_disetujui'], $item['id_detail']);
-                    $stmt_approve->execute();
-                    }
-                }
-
-            $this->db->commit();
-            return ['success' => TRUE];
-            }
-        catch (Exception $e) {
-            $this->db->rollback();
-            $msg = (ENVIRONMENT === 'development') ? $e->getMessage() : 'Gagal memproses permintaan.';
-            return ['success' => FALSE, 'message' => $msg];
-            }
-        }
-    }
+<?php require_once APP_PATH . '/views/templates/footer.php'; ?>
