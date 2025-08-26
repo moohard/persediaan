@@ -38,4 +38,5 @@ require_once APP_PATH . '/core/Router.php';
 
 // Inisialisasi dan jalankan router
 $router = new Router();
+
 $router->dispatch();

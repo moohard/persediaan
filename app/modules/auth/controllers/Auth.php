@@ -9,9 +9,11 @@ class Auth extends Controller
     {
 
         parent::__construct();
-        if (isset($_SESSION['user_id']) && strpos($_SERVER['REQUEST_URI'], 'logout') === false) {
+        if (isset($_SESSION['user_id']) && strpos($_SERVER['REQUEST_URI'], 'logout') === FALSE)
+        {
             $this->redirect('/dashboard');
         }
+
     }
 
     public function index()

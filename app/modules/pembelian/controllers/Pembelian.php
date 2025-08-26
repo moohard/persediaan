@@ -6,8 +6,7 @@ class Pembelian extends Controller {
 
     public function __construct() {
         parent::__construct();
-        // Hanya admin yang bisa mengakses modul ini
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'developer'])) {
             set_flash_message('danger', 'Anda tidak memiliki akses ke halaman ini.');
             $this->redirect('/dashboard');
         }
