@@ -25,41 +25,45 @@ generate_csrf_token();
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <?php if (isset($_SESSION['user_id'])) : ?>
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dashboard">Dashboard</a>
-                        </li>
-                        <?php if ($_SESSION['role'] === 'admin') : ?>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    Master Data
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="/barang">Data Barang</a></li>
-                                    <!-- Tambahkan link master data lain di sini -->
-                                </ul>
-                            </li>
-                        <?php endif; ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/permintaan">Permintaan</a>
-                        </li>
-                        <!-- PERUBAHAN: Tambahkan link Query Log untuk admin -->
-                        <?php if ($_SESSION['role'] === 'admin' && ENVIRONMENT === 'development') : ?>
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" href="/log">Query Log</a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> <?php echo e($_SESSION['nama_lengkap']); ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="/auth/logout">Logout</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <?php if ($_SESSION['role'] === 'admin') : ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Master Data
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/barang">Data Barang</a></li>
+                            <!-- Tambahkan link master data lain di sini -->
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pembelian">Proses Pembelian</a>
+                    </li>
+                    <?php endif; ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/permintaan">Permintaan</a>
+                    </li>
+
+                    <!-- PERUBAHAN: Tambahkan link Query Log untuk admin -->
+                    <?php if ($_SESSION['role'] === 'admin' && ENVIRONMENT === 'development') : ?>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="/log">Query Log</a>
+                    </li>
+                    <?php endif; ?>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <?php echo e($_SESSION['nama_lengkap']); ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/auth/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
                 <?php endif; ?>
             </div>
         </div>

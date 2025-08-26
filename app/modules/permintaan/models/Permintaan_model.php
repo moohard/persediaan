@@ -4,20 +4,7 @@ require_once APP_PATH . '/core/Model.php';
 class Permintaan_model extends Model {
     
     public function getAllPermintaan() {
-        // PERBAIKAN: Menggunakan query langsung yang sudah benar, bukan VIEW yang mungkin usang.
-        $query = "
-            SELECT 
-                p.id_permintaan,
-                p.kode_permintaan,
-                p.tanggal_permintaan,
-                p.tipe_permintaan,
-                p.status_permintaan,
-                pemohon.nama_lengkap AS nama_pemohon,
-                (SELECT COUNT(*) FROM tbl_detail_permintaan_atk dp WHERE dp.id_permintaan = p.id_permintaan) AS jumlah_item
-            FROM tbl_permintaan_atk p
-            JOIN tbl_pengguna pemohon ON p.id_pengguna_pemohon = pemohon.id_pengguna
-            ORDER BY p.tanggal_permintaan DESC, p.id_permintaan DESC
-        ";
+        $query = "SELECT * FROM v_permintaan_lengkap ORDER BY tanggal_permintaan DESC, id_permintaan DESC";
         return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
     

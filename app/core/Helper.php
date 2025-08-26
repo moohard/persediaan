@@ -63,27 +63,23 @@ function display_flash_message()
  * Fungsi untuk mencatat query SQL ke dalam file log.
  * Hanya aktif jika ENVIRONMENT diatur ke 'development'.
  */
-function log_query($query, $error = NULL)
-{
 
-    if (ENVIRONMENT !== 'development')
-    {
+function log_query($query, $error = null) {
+    if (ENVIRONMENT !== 'development') {
         return;
     }
 
     $log_path = ROOT_PATH . '/logs';
-    if (!is_dir($log_path))
-    {
-        mkdir($log_path, 0777, TRUE);
+    if (!is_dir($log_path)) {
+        mkdir($log_path, 0777, true);
     }
 
-    $log_file  = $log_path . '/query_log_' . date('Y-m-d') . '.log';
+    $log_file = $log_path . '/query_log_' . date('Y-m-d') . '.log';
     $timestamp = date('Y-m-d H:i:s');
-
+    
     $log_message = "[$timestamp]\n";
     $log_message .= "QUERY: " . trim($query) . "\n";
-    if ($error)
-    {
+    if ($error) {
         $log_message .= "ERROR: " . trim($error) . "\n";
     }
     $log_message .= "--------------------------------------------------\n\n";
@@ -91,3 +87,4 @@ function log_query($query, $error = NULL)
     // Tulis ke file log
     file_put_contents($log_file, $log_message, FILE_APPEND);
 }
+?>
