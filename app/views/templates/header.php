@@ -1,5 +1,4 @@
 <?php
-
 regenerate_session_periodically();
 generate_csrf_token();
 ?>
@@ -24,12 +23,12 @@ generate_csrf_token();
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <?php if (isset($_SESSION['user_id'])) : ?>
+                <?php if (isset($_SESSION['user_id'])): ?>
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="/dashboard">Dashboard</a>
                     </li>
-                    <?php if ($_SESSION['role'] === 'admin') : ?>
+                    <?php if (in_array($_SESSION['role'], ['admin', 'developer'])): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             Master Data
@@ -46,9 +45,7 @@ generate_csrf_token();
                     <li class="nav-item">
                         <a class="nav-link" href="/permintaan">Permintaan</a>
                     </li>
-
-                    <!-- PERUBAHAN: Tambahkan link Query Log untuk admin -->
-                    <?php if ($_SESSION['role'] === 'admin' && ENVIRONMENT === 'development') : ?>
+                    <?php if ($_SESSION['role'] === 'developer' && ENVIRONMENT === 'development'): ?>
                     <li class="nav-item">
                         <a class="nav-link text-warning" href="/log">Query Log</a>
                     </li>

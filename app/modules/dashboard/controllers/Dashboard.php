@@ -10,15 +10,14 @@ class Dashboard extends Controller
 
         parent::__construct();
         // PERBAIKAN: Pindahkan cek login ke constructor untuk melindungi semua method
-        if (!isset($_SESSION['user_id']))
-        {
-            $this->redirect('/auth');
-        }
+        // if (!isset($_SESSION['user_id'])) {
+        //     $this->redirect('/auth');
+        // }
     }
 
     public function index()
     {
-
+echo "string";exit;
         $data['title']     = 'Dashboard';
         $data['nama_user'] = $_SESSION['nama_lengkap'];
         $this->view('dashboard', 'dashboard_view', $data);

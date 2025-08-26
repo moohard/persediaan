@@ -1,5 +1,4 @@
 <?php
-
 define('ROOT_PATH', dirname(__DIR__));
 define('APP_PATH', ROOT_PATH . '/app');
 
@@ -18,7 +17,6 @@ if (class_exists('Dotenv\Dotenv'))
 
 // 3. Atur lingkungan berdasarkan variabel dari .env atau default
 define('ENVIRONMENT', $_ENV['APP_ENV'] ?? 'production');
-
 if (ENVIRONMENT == 'development')
 {
     error_reporting(E_ALL);
@@ -31,8 +29,8 @@ if (ENVIRONMENT == 'development')
 
 // Muat file keamanan SEBELUM session_start()
 require_once APP_PATH . '/core/Security.php';
-
 session_start();
+
 
 // Muat file konfigurasi dan router
 require_once APP_PATH . '/config/config.php';
@@ -41,4 +39,3 @@ require_once APP_PATH . '/core/Router.php';
 // Inisialisasi dan jalankan router
 $router = new Router();
 $router->dispatch();
-?>

@@ -8,9 +8,9 @@ class Barang extends Controller
     public function __construct()
         {
         parent::__construct();
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'developer'])) {
             set_flash_message('danger', 'Anda tidak memiliki akses ke halaman ini.');
-            $this . redirect('/dashboard');
+            $this->redirect('/dashboard');
             }
         $this->barangModel = $this->model('barang', 'Barang_model');
         }
