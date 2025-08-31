@@ -8,38 +8,34 @@ class Model
     public function __construct()
     {
 
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-        try
+        // Membuat koneksi mysqli baru
+        $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+
+        // Memeriksa error koneksi
+        if ($this->db->connect_error)
         {
-            $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-            $this->db->set_charset('utf8mb4');
-        } catch (mysqli_sql_exception $e)
-        {
-            // Panggil fungsi log sebelum menghentikan eksekusi
-            log_query("Koneksi Gagal", $e->getMessage());
+            // Di development, tampilkan error. Di production, tampilkan pesan generik.
             if (ENVIRONMENT === 'development')
             {
-                die("Koneksi database gagal: " . $e->getMessage());
+                die("Koneksi gagal: " . $this->db->connect_error);
             } else
             {
-                die("Tidak dapat terhubung ke server database.");
+                die("Terjadi masalah koneksi database. Silakan coba lagi nanti.");
             }
         }
+
+        // Mengatur set karakter ke utf8mb4
+        $this->db->set_charset("utf8mb4");
     }
 
-    // PERBAIKAN: Tambahkan fungsi untuk logging sebelum query dieksekusi
-    protected function logQueryBeforeExecute($query)
-    {
-
-        // Fungsi ini hanya sebagai contoh, logging utama ada di catch block
-        // Anda bisa mengaktifkan ini jika ingin me-log SEMUA query, bukan hanya yang error
-        // log_query($query);
-    }
-
+    // Destructor untuk menutup koneksi saat objek dihancurkan
     public function __destruct()
     {
 
-        $this->db->close();
+        if ($this->db)
+        {
+            $this->db->close();
+        }
     }
 
 }

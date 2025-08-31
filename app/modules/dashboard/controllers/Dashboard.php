@@ -20,7 +20,8 @@ class Dashboard extends Controller
     {
 
         $data['title']     = 'Dashboard';
-        $data['nama_user'] = $_SESSION['nama_lengkap'];
+        $data['nama_user'] = $_SESSION['nama'];
+        
         $this->view('dashboard', 'dashboard_view', $data);
     }
 

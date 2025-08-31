@@ -3,38 +3,68 @@
 class Encryption
 {
 
-    private const CIPHER = 'aes-128-cbc';
-
     private $key;
 
-    public function __construct()
+    private $cipher = "AES-128-CBC";
+
+    public function __construct($key)
     {
 
-        $this->key = ENCRYPTION_KEY;
+        // Pastikan kunci selalu 32 byte untuk AES-256 (yang digunakan oleh sha256)
+        // Meskipun cipher kita AES-128, menggunakan hash yang lebih kuat untuk derivasi kunci adalah praktik yang baik.
+        $this->key = hash('sha256', $key, TRUE);
     }
 
     public function encrypt($data)
     {
 
-        $iv_length  = openssl_cipher_iv_length(self::CIPHER);
-        $iv         = openssl_random_pseudo_bytes($iv_length);
-        $ciphertext = openssl_encrypt($data, self::CIPHER, $this->key, OPENSSL_RAW_DATA, $iv);
-        $encrypted  = base64_encode($iv . $ciphertext);
+        $ivlen          = openssl_cipher_iv_length($this->cipher);
+        $iv             = openssl_random_pseudo_bytes($ivlen);
+        $ciphertext_raw = openssl_encrypt($data, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv);
+        $hmac           = hash_hmac('sha256', $ciphertext_raw, $this->key, TRUE);
 
-        return strtr($encrypted, '+/', '-_');
+        // Gabungkan semuanya dan enkode dengan Base64
+        $encoded = base64_encode($iv . $hmac . $ciphertext_raw);
+
+        // [PERBAIKAN] Jadikan URL-safe
+        return strtr($encoded, '+/', '-_');
     }
 
-    public function decrypt($encrypted_data)
+    public function decrypt($data)
     {
 
-        $data         = strtr($encrypted_data, '-_', '+/');
-        $decoded_data = base64_decode($data, TRUE);
-        if ($decoded_data === FALSE) return FALSE;
-        $iv_length  = openssl_cipher_iv_length(self::CIPHER);
-        $iv         = substr($decoded_data, 0, $iv_length);
-        $ciphertext = substr($decoded_data, $iv_length);
-        if (strlen($iv) < $iv_length) return FALSE;
-        return openssl_decrypt($ciphertext, self::CIPHER, $this->key, OPENSSL_RAW_DATA, $iv);
+        // [PERBAIKAN] Kembalikan dari format URL-safe ke Base64 standar
+        $data_decoded = strtr($data, '-_', '+/');
+
+        $c = base64_decode($data_decoded);
+        if ($c === FALSE)
+        {
+            return FALSE;
+        }
+
+        $ivlen = openssl_cipher_iv_length($this->cipher);
+        if (mb_strlen($c, '8bit') < ($ivlen + 32))
+        {
+            return FALSE;
+        }
+
+        $iv             = substr($c, 0, $ivlen);
+        $hmac           = substr($c, $ivlen, 32);
+        $ciphertext_raw = substr($c, $ivlen + 32);
+
+        $original_plaintext = openssl_decrypt($ciphertext_raw, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv);
+        if ($original_plaintext === FALSE)
+        {
+            return FALSE;
+        }
+
+        $calcmac = hash_hmac('sha256', $ciphertext_raw, $this->key, TRUE);
+        if (hash_equals($hmac, $calcmac))
+        {
+            return $original_plaintext;
+        }
+
+        return FALSE;
     }
 
 }

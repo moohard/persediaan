@@ -1,56 +1,53 @@
 <?php
 
-require_once APP_PATH . '/core/Helper.php';
-
 class Controller
 {
 
-    public $encryption;
+    protected $encryption;
 
     public function __construct()
     {
-        require_once APP_PATH . '/core/Encryption.php';
-        $this->encryption = new Encryption();
-        regenerate_session_periodically();
-    }
 
-    public function view($module, $view, $data = [])
-    {
-
-        $data['encryption'] = $this->encryption;
-        extract($data);
-        $viewFile = APP_PATH . '/modules/' . $module . '/views/' . $view . '.php';
-        if (file_exists($viewFile))
-        {
-            require_once $viewFile;
-        } else
-        {
-            die("View file not found: " . $viewFile);
-        }
+        start_secure_session();
+        $this->encryption = new Encryption(ENCRYPTION_KEY);
     }
 
     public function model($module, $model)
     {
 
-        $modelFile = APP_PATH . '/modules/' . $module . '/models/' . $model . '.php';
-        if (file_exists($modelFile))
+        $model_path = APP_PATH . "/modules/$module/models/$model.php";
+        if (file_exists($model_path))
         {
-            require_once $modelFile;
+            require_once $model_path;
 
             return new $model();
+        }
+        return NULL;
+    }
+
+    public function view($module, $view, $data = [])
+    {
+
+        $view_path = APP_PATH . "/modules/$module/views/$view.php";
+        if (file_exists($view_path))
+        {
+            extract($data);
+            require_once $view_path;
         } else
         {
-            die("Model file not found: " . $modelFile);
+            die("View tidak ditemukan: $view_path");
         }
     }
 
-    protected function redirect($url)
+    public function redirect($url, $flash_message = NULL)
     {
 
+        if ($flash_message)
+        {
+            set_flash_message($flash_message['type'], $flash_message['message']);
+        }
         header('Location: ' . BASE_URL . $url);
         exit();
     }
 
 }
-
-?>

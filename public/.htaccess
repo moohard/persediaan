@@ -1,14 +1,20 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Alihkan ke HTTPS
+    # Atur basis rewrite jika aplikasi berada di subdirektori
+    # Contoh: jika URL adalah http://localhost/persediaan, uncomment baris di bawah
+    # RewriteBase /persediaan/public/
+    
+    # Alihkan semua koneksi ke HTTPS (baik untuk produksi)
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Arahkan semua request yang BUKAN file atau direktori yang ada
+    # Aturan utama:
+    # Jangan terapkan aturan di bawah ini jika permintaan adalah untuk file yang ada
     RewriteCond %{REQUEST_FILENAME} !-f
+    # Jangan terapkan aturan di bawah ini jika permintaan adalah untuk direktori yang ada
     RewriteCond %{REQUEST_FILENAME} !-d
     
-    # Alihkan ke index.php, dan biarkan PHP menangani path
+    # Arahkan semua permintaan lain ke index.php
     RewriteRule . index.php [L]
 </IfModule>

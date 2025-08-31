@@ -11,9 +11,9 @@ class Barangmasuk extends Controller
     {
 
         parent::__construct();
-        if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], [ 'admin', 'developer' ]))
+        if (!isset($_SESSION['user_id']))
         {
-            $this->redirect('/dashboard');
+            $this->redirect('/auth');
         }
         $this->barangMasukModel = $this->model('barangmasuk', 'Barangmasuk_model');
     }
@@ -21,12 +21,16 @@ class Barangmasuk extends Controller
     public function index()
     {
 
-        $data['title']     = 'Penerimaan Barang Masuk';
+        if (!has_permission('barangmasuk_process'))
+        {
+            $this->redirect('/dashboard', [ 'type' => 'danger', 'message' => 'Anda tidak memiliki akses.' ]);
+        }
+        $data['title']     = 'Penerimaan Barang';
         $data['js_module'] = 'barangmasuk';
         $this->view('barangmasuk', 'index_view', $data);
     }
 
-    public function api($method = '')
+    public function api($method = '', $param = '')
     {
 
         header('Content-Type: application/json');
@@ -43,35 +47,50 @@ class Barangmasuk extends Controller
         }
 
         $input = json_decode(file_get_contents('php://input'), TRUE);
-
         switch ($method)
         {
-            case 'getPurchased':
-                $permintaan = $this->barangMasukModel->getPurchasedRequests();
-                foreach ($permintaan as &$item)
+            case 'getPurchasedRequests':
+                $requests = $this->barangMasukModel->getProcessedPurchaseRequests();
+                foreach ($requests as &$req)
                 {
-                    $item['id_permintaan_encrypted'] = $this->encryption->encrypt($item['id_permintaan']);
+                    $req['id_permintaan_encrypted'] = $this->encryption->encrypt($req['id_permintaan']);
                 }
-                echo json_encode([ 'success' => TRUE, 'data' => $permintaan ]);
+                echo json_encode([ 'success' => TRUE, 'data' => $requests ]);
                 break;
 
-            case 'processReceipt':
-                $id = $this->encryption->decrypt($input['id']);
+            case 'getDetail':
+                $id = $this->encryption->decrypt($param);
                 if (!$id)
                 {
                     http_response_code(400);
-                    echo json_encode([ 'success' => FALSE, 'message' => 'ID Permintaan tidak valid.' ]);
+                    echo json_encode([ 'success' => FALSE, 'message' => 'ID tidak valid.' ]);
                     return;
                 }
-                $result = $this->barangMasukModel->processGoodsReceipt($id, $_SESSION['user_id']);
-                if ($result['success'])
+                $details = $this->barangMasukModel->getRequestDetailsForReceipt($id);
+
+                if ($details)
                 {
-                    echo json_encode([ 'success' => TRUE, 'message' => 'Barang berhasil diterima dan stok diperbarui.' ]);
+                    echo json_encode([ 'success' => TRUE, 'data' => $details ]);
                 } else
                 {
-                    http_response_code(500);
-                    echo json_encode([ 'success' => FALSE, 'message' => $result['message'] ]);
+                    http_response_code(404);
+                    echo json_encode([ 'success' => FALSE, 'message' => 'Data permintaan tidak ditemukan.' ]);
                 }
+                break;
+
+            case 'processReceipt':
+                $id = $this->encryption->decrypt($input['id_permintaan_encrypted'] ?? NULL);
+                $itemsAlokasi = $input['items'] ?? [];
+
+                if (!$id || empty($itemsAlokasi))
+                {
+                    http_response_code(400);
+                    echo json_encode([ 'success' => FALSE, 'message' => 'Data tidak lengkap.' ]);
+                    return;
+                }
+
+                $result = $this->barangMasukModel->processReceipt($id, $_SESSION['user_id'], $itemsAlokasi);
+                echo json_encode($result);
                 break;
         }
     }

@@ -20,83 +20,71 @@ class Router
     public function parseUrl()
     {
 
-        $url_path = '/';
-        if (isset($_SERVER['REQUEST_URI']))
-        {
-            $url_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        }
-
-        // Hapus base path dari URL jika aplikasi berada di subfolder
+        $url       = $_SERVER['REQUEST_URI'];
         $base_path = parse_url(BASE_URL, PHP_URL_PATH);
-        if ($base_path && strpos($url_path, $base_path) === 0)
+        if ($base_path && strpos($url, $base_path) === 0)
         {
-            $url_path = substr($url_path, strlen($base_path));
+            $url = substr($url, strlen($base_path));
         }
+        $url = trim($url, '/');
+        $url = filter_var($url, FILTER_SANITIZE_URL);
+        $url = explode('/', $url);
 
-        $url = explode('/', filter_var(trim($url_path, '/'), FILTER_SANITIZE_URL));
+        // Set Module dan Controller
+        if (!empty($url[0]))
+        {
+            $module_path     = APP_PATH . '/modules/' . $url[0];
+            $controller_name = ucfirst($url[0]);
+            $controller_file = $module_path . '/controllers/' . $controller_name . '.php';
 
-        // 1. Tentukan Modul
-        if (!empty($url[0]) && is_dir(APP_PATH . '/modules/' . $url[0]))
-        {
-            $this->module = $url[0];
-            array_shift($url);
-        }
-
-        // 2. Tentukan Controller
-        if (!empty($url[0]) && file_exists(APP_PATH . '/modules/' . $this->module . '/controllers/' . ucfirst($url[0]) . '.php'))
-        {
-            $this->controller = ucfirst($url[0]);
-            array_shift($url);
-        } else
-        {
-            // Fallback ke controller default untuk modul (misal: /barang akan memuat controller Barang)
-            if (file_exists(APP_PATH . '/modules/' . $this->module . '/controllers/' . ucfirst($this->module) . '.php'))
+            if (is_dir($module_path) && file_exists($controller_file))
             {
-                $this->controller = ucfirst($this->module);
+                $this->module     = $url[0];
+                $this->controller = $controller_name;
+                unset($url[0]);
             }
         }
 
-        // 3. Tentukan Method
-        if (!empty($url[0]))
+        // Set Method
+        if (isset($url[1]))
         {
-            $this->method = $url[0];
-            array_shift($url);
+            $controller_path = APP_PATH . '/modules/' . $this->module . '/controllers/' . $this->controller . '.php';
+            if (file_exists($controller_path))
+            {
+                require_once $controller_path;
+                if (method_exists($this->controller, $url[1]))
+                {
+                    $this->method = $url[1];
+                    unset($url[1]);
+                }
+            }
         }
 
-        // 4. Sisa URL adalah parameter
+        // Set Params
         $this->params = $url ? array_values($url) : [];
     }
 
     public function dispatch()
     {
 
-        $controllerFile = APP_PATH . '/modules/' . $this->module . '/controllers/' . $this->controller . '.php';
+        $controller_path = APP_PATH . '/modules/' . $this->module . '/controllers/' . $this->controller . '.php';
 
-        if (file_exists($controllerFile))
+        if (file_exists($controller_path))
         {
-            require_once $controllerFile;
+            require_once $controller_path;
+            $controllerInstance = new $this->controller;
 
-            if (class_exists($this->controller))
+            if (method_exists($controllerInstance, $this->method))
             {
-                $controllerInstance = new $this->controller;
-
-                if (method_exists($controllerInstance, $this->method))
-                {
-                    call_user_func_array([ $controllerInstance, $this->method ], $this->params);
-                } else
-                {
-                    die("Method '{$this->method}' not found in controller '{$this->controller}'.");
-                }
+                call_user_func_array([ $controllerInstance, $this->method ], $this->params);
             } else
             {
-                die("Class '{$this->controller}' not found in file '{$controllerFile}'.");
+                die("Method '{$this->method}' tidak ditemukan di controller '{$this->controller}'.");
             }
         } else
         {
-            die("Controller file '{$controllerFile}' not found for module '{$this->module}'.");
+            die("Controller '{$this->controller}' tidak ditemukan di modul '{$this->module}'.");
         }
     }
 
 }
-
-?>

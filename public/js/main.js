@@ -1,13 +1,17 @@
-// File ini untuk skrip global yang berjalan di semua halaman
-document.addEventListener("DOMContentLoaded", () => {
-  // Ambil token CSRF dari meta tag di header
-  const csrfToken = document
-    .querySelector('meta[name="csrf-token"]')
-    .getAttribute("content");
+/**
+ * Main JavaScript File
+ * Berisi konfigurasi global untuk aplikasi.
+ */
+// Konfigurasi default untuk Axios
+// Ini akan secara otomatis menambahkan header CSRF token ke setiap
+// permintaan AJAX yang dikirim, yang penting untuk keamanan.
+const csrfToken = document
+  .querySelector('meta[name="csrf-token"]')
+  ?.getAttribute("content");
 
-  // Konfigurasi default global untuk semua permintaan Axios
-  if (typeof axios !== "undefined") {
-    axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
-    axios.defaults.headers.common["X-CSRF-Token"] = csrfToken;
-  }
-});
+if (csrfToken) {
+  axios.defaults.headers.common["X-CSRF-TOKEN"] = csrfToken;
+  axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+} else {
+  console.error("CSRF token not found. AJAX requests will fail.");
+}

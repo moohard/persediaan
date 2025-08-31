@@ -1,23 +1,34 @@
 <?php
+
 define('ROOT_PATH', dirname(__DIR__));
 define('APP_PATH', ROOT_PATH . '/app');
 
-// 1. Muat autoloader Composer (jika ada)
+// Muat autoloader Composer
 if (file_exists(ROOT_PATH . '/vendor/autoload.php'))
 {
     require_once ROOT_PATH . '/vendor/autoload.php';
 }
 
-// 2. Muat variabel dari file .env ke dalam sistem
+// Muat variabel dari file .env
 if (class_exists('Dotenv\Dotenv'))
 {
     $dotenv = Dotenv\Dotenv::createImmutable(ROOT_PATH);
     $dotenv->load();
 }
 
-// 3. Atur lingkungan berdasarkan variabel dari .env atau default
+// --- PENGATURAN LINGKUNGAN (ENVIRONMENT) ---
 define('ENVIRONMENT', $_ENV['APP_ENV'] ?? 'production');
-if (ENVIRONMENT == 'development')
+define('BASE_URL', $_ENV['BASE_URL'] ?? 'http://localhost');
+define('ENCRYPTION_KEY', $_ENV['ENCRYPTION_KEY'] ?? 'ganti_dengan_kunci_rahasia_anda');
+
+// [PERBAIKAN] Mendefinisikan konstanta database dari .env
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+define('DB_NAME', $_ENV['DB_NAME'] ?? '');
+define('DB_USER', $_ENV['DB_USER'] ?? 'root');
+define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+
+// Pengaturan Error Reporting
+if (ENVIRONMENT === 'development')
 {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
@@ -27,16 +38,13 @@ if (ENVIRONMENT == 'development')
     ini_set('display_errors', 0);
 }
 
-// Muat file keamanan SEBELUM session_start()
-require_once APP_PATH . '/core/Security.php';
-session_start();
-
-
-// Muat file konfigurasi dan router
-require_once APP_PATH . '/config/config.php';
+// Muat file inti
+require_once APP_PATH . '/core/Helper.php';
+require_once APP_PATH . '/core/Encryption.php';
+require_once APP_PATH . '/core/Model.php'; // Model harus dimuat sebelum Controller
+require_once APP_PATH . '/core/Controller.php';
 require_once APP_PATH . '/core/Router.php';
 
-// Inisialisasi dan jalankan router
+// Jalankan Router
 $router = new Router();
-
 $router->dispatch();

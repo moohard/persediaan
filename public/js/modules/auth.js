@@ -1,55 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("login-form");
-  if (!form) return;
 
-  form.addEventListener("submit", async (e) => {
+  const loginForm = document.getElementById("login-form");
+  if (!loginForm) return;
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const formData = new FormData(form);
+    const formData = new FormData(loginForm);
     const data = Object.fromEntries(formData.entries());
-
-    Swal.fire({
-      title: "Memproses...",
-      text: "Mohon tunggu sebentar.",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
     try {
-      // Axios sekarang sudah memiliki header default dari main.js
-      const response = await axios.post("/auth/api/process_login", data);
-
-      if (response.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: response.data.message,
-          timer: 1500,
-          showConfirmButton: false,
-        }).then(() => {
-          window.location.href = response.data.redirect_url;
-        });
+      const response = await apiCall("post", "/auth/api/process_login", data);
+      if (response.success) {
+        showToast("success", response.message);
+        // Beri sedikit waktu agar toast terlihat sebelum redirect
+        setTimeout(() => {
+          window.location.href = response.redirect_url;
+        }, 1000);
       }
     } catch (error) {
-      const errorData = error.response?.data;
-      let errorMessage =
-        errorData?.message || "Terjadi kesalahan tidak terduga.";
-
-      if (errorData?.errors) {
-        errorMessage += '<br><ul class="text-start mt-2">';
-        errorData.errors.forEach((err) => {
-          errorMessage += `<li>${err}</li>`;
-        });
-        errorMessage += "</ul>";
+      console.log(error);
+      // Pesan error sudah ditampilkan oleh helper apiCall
+      // Reset captcha jika ada
+      const captchaImg = document.getElementById("captcha-img");
+      if (captchaImg) {
+        captchaImg.src = "/auth/captcha?" + new Date().getTime();
+        document.getElementById("captcha").value = "";
       }
-
-      Swal.fire({
-        icon: "error",
-        title: "Login Gagal",
-        html: errorMessage,
-      });
     }
   });
 });
