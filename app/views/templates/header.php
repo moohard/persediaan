@@ -110,6 +110,13 @@
                                 </a>
                             </li>
                         <?php endif; ?>
+                        <?php if (has_permission('pengaturan_view')) : ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/pengaturan">
+                                    <i class="bi bi-gear"></i> Pengaturan
+                                </a>
+                            </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </nav>

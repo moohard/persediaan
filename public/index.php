@@ -68,16 +68,23 @@ require_once APP_PATH . '/core/Router.php';
 set_exception_handler(function ($exception)
 {
     error_log("Uncaught Exception: " . $exception->getMessage());
+
+    // Log detailed error for debugging
+    error_log("File: " . $exception->getFile() . ":" . $exception->getLine());
+    error_log("Trace: " . $exception->getTraceAsString());
+
     if (ENVIRONMENT === 'development')
     {
+        header('Content-Type: application/json');
         echo json_encode([
             'success' => FALSE,
             'message' => 'Internal Server Error',
             'error'   => $exception->getMessage(),
-            'trace'   => $exception->getTraceAsString(),
+            'file'    => $exception->getFile() . ":" . $exception->getLine()
         ]);
     } else
     {
+        header('Content-Type: application/json');
         echo json_encode([
             'success' => FALSE,
             'message' => 'Internal Server Error',

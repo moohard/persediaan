@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   const tableBody = document.getElementById("laporan-stok-body");
   const btnPrint = document.getElementById("btn-print-stok");
-  let reportData = []; // Simpan data laporan untuk dicetak
+  let reportData = [];
 
   const loadStockReport = async () => {
     if (!tableBody) return;
     try {
       const response = await apiCall("get", "/laporan/api/getStokBarang");
-      reportData = response.data; // Simpan data
+      reportData = response.data;
       let html = "";
       if (reportData.length > 0) {
         reportData.forEach((item, index) => {
@@ -15,7 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <tr>
                             <td>${index + 1}</td>
                             <td>${e(item.kode_barang)}</td>
-                            <td>${e(item.nama_barang)}</td>
+                            <td><a href="#" class="link-kartu-stok" data-id="${
+                              item.id_barang
+                            }">${e(item.nama_barang)}</a></td>
                             <td>${e(item.nama_kategori) || "-"}</td>
                             <td>${e(item.nama_satuan) || "-"}</td>
                             <td class="text-center">${e(item.stok_umum)}</td>
@@ -43,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Judul Laporan
     doc.setFontSize(16);
     doc.text("Laporan Stok Barang ATK", 14, 22);
     doc.setFontSize(10);
@@ -55,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
       30
     );
 
-    // Buat tabel
     doc.autoTable({
       startY: 40,
       head: [
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         item.stok_perkara,
         item.stok_total,
       ]),
-      headStyles: { fillColor: [41, 128, 185] }, // Warna biru
+      headStyles: { fillColor: [41, 128, 185] },
       styles: { fontSize: 8 },
       columnStyles: {
         0: { cellWidth: 10 },
@@ -89,8 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
         7: { halign: "center" },
       },
     });
-
-    // Simpan PDF
     doc.save(
       `laporan-stok-barang-${new Date().toISOString().slice(0, 10)}.pdf`
     );
@@ -98,53 +96,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnPrint?.addEventListener("click", printStockReport);
 
-  loadStockReport();
   const barangSelect = document.getElementById("barang-select");
   const kartuStokTableBody = document.getElementById("kartu-stok-body");
   const btnPrintKartuStok = document.getElementById("btn-print-kartu-stok");
   let kartuStokReportData = [];
-  async function loadKartuStok(idBarang) {
+
+  const loadStockCard = async () => {
+    if (!kartuStokTableBody || !barangSelect.value) {
+      kartuStokTableBody.innerHTML =
+        '<tr><td colspan="8" class="text-center">Silakan pilih barang untuk melihat riwayat.</td></tr>';
+      btnPrintKartuStok.classList.add("d-none");
+      return;
+    }
+
     try {
       const response = await apiCall(
         "get",
-        `/laporan/api/getKartuStok?id_barang=${idBarang}`
+        `/laporan/api/getKartuStok?id_barang=${barangSelect.value}`
       );
-      console.log("Response Kartu Stok:", response); // Debug log
-      renderKartuStok(response.data);
+      kartuStokReportData = response.data;
+      let html = "";
+      if (kartuStokReportData.length > 0) {
+        kartuStokReportData.forEach((item) => {
+          const jumlahUbahClass =
+            item.jumlah_ubah >= 0 ? "text-success" : "text-danger";
+          const jumlahUbahText =
+            item.jumlah_ubah > 0 ? `+${item.jumlah_ubah}` : item.jumlah_ubah;
+          html += `
+                        <tr>
+                            <td>${new Date(item.tanggal_log).toLocaleString(
+                              "id-ID"
+                            )}</td>
+                            <td>${e(item.keterangan) || "-"}</td>
+                            <td class="text-center fw-bold ${jumlahUbahClass}">${jumlahUbahText}</td>
+                            <td class="text-center">${e(
+                              item.stok_sebelum_umum
+                            )}</td>
+                            <td class="text-center">${e(
+                              item.stok_sebelum_perkara
+                            )}</td>
+                            <td class="text-center">${e(
+                              item.stok_sesudah_umum
+                            )}</td>
+                            <td class="text-center">${e(
+                              item.stok_sesudah_perkara
+                            )}</td>
+                            <td>${e(item.nama_pengguna) || "Sistem"}</td>
+                        </tr>
+                    `;
+        });
+        btnPrintKartuStok.classList.remove("d-none");
+      } else {
+        html =
+          '<tr><td colspan="8" class="text-center">Tidak ada riwayat pergerakan untuk barang ini.</td></tr>';
+        btnPrintKartuStok.classList.add("d-none");
+      }
+      kartuStokTableBody.innerHTML = html;
     } catch (error) {
-      console.error("Error loading kartu stok:", error);
-      document.getElementById("kartu-stok-body").innerHTML =
-        '<tr><td colspan="7" class="text-center text-danger">Gagal memuat data.</td></tr>';
+      /* Error ditangani apiCall */
     }
-  }
-  function renderKartuStok(data) {
-    let html = "";
-    if (data && data.length > 0) {
-      data.forEach((item) => {
-        html += `
-                    <tr>
-                        <td>${formatDate(item.tanggal_log)}</td>
-                        <td>${e(item.jenis_transaksi)}</td>
-                        <td>${e(item.keterangan)}</td>
-                        <td class="text-center">${item.jumlah_ubah}</td>
-                        <td class="text-center">${item.stok_awal}</td>
-                        <td class="text-center">${item.stok_akhir}</td>
-                        <td>${e(item.nama_pengguna)}</td>
-                    </tr>
-                `;
-      });
-    } else {
-      html =
-        '<tr><td colspan="7" class="text-center">Tidak ada data transaksi.</td></tr>';
-    }
-    document.getElementById("kartu-stok-body").innerHTML = html;
-  }
+  };
 
-  function formatDate(dateString) {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID");
-  }
   const printStockCard = () => {
     if (kartuStokReportData.length === 0) {
       showToast("warning", "Tidak ada data untuk dicetak.");
@@ -154,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedBarangText =
       barangSelect.options[barangSelect.selectedIndex].text;
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: "landscape" });
 
     doc.setFontSize(16);
     doc.text(`Laporan Kartu Stok: ${selectedBarangText}`, 14, 22);
@@ -165,26 +177,63 @@ document.addEventListener("DOMContentLoaded", () => {
       startY: 40,
       head: [
         [
-          "Tanggal",
-          "Transaksi",
-          "Keterangan",
-          "Jumlah",
-          "Awal",
-          "Akhir",
-          "Pengguna",
+          {
+            content: "Tanggal",
+            rowSpan: 2,
+            styles: { halign: "center", valign: "middle" },
+          },
+          {
+            content: "Keterangan",
+            rowSpan: 2,
+            styles: { halign: "center", valign: "middle" },
+          },
+          {
+            content: "Jumlah Ubah",
+            rowSpan: 2,
+            styles: { halign: "center", valign: "middle" },
+          },
+          { content: "Stok Awal", colSpan: 2, styles: { halign: "center" } },
+          { content: "Stok Akhir", colSpan: 2, styles: { halign: "center" } },
+          {
+            content: "Pengguna",
+            rowSpan: 2,
+            styles: { halign: "center", valign: "middle" },
+          },
+        ],
+        [
+          { content: "Umum", styles: { halign: "center" } },
+          { content: "Perkara", styles: { halign: "center" } },
+          { content: "Umum", styles: { halign: "center" } },
+          { content: "Perkara", styles: { halign: "center" } },
         ],
       ],
       body: kartuStokReportData.map((item) => [
         new Date(item.tanggal_log).toLocaleString("id-ID"),
-        item.jenis_transaksi,
         item.keterangan || "-",
-        item.jumlah_ubah,
-        item.stok_sebelum_total,
-        item.stok_sesudah_total,
+        {
+          content: String(item.jumlah_ubah ?? 0),
+          styles: { halign: "center" },
+        },
+        {
+          content: String(item.stok_sebelum_umum ?? 0),
+          styles: { halign: "center" },
+        },
+        {
+          content: String(item.stok_sebelum_perkara ?? 0),
+          styles: { halign: "center" },
+        },
+        {
+          content: String(item.stok_sesudah_umum ?? 0),
+          styles: { halign: "center" },
+        },
+        {
+          content: String(item.stok_sesudah_perkara ?? 0),
+          styles: { halign: "center" },
+        },
         item.nama_pengguna || "Sistem",
       ]),
-      headStyles: { fillColor: [41, 128, 185] },
-      styles: { fontSize: 8 },
+      headStyles: { fillColor: [41, 128, 185], halign: "center" },
+      styles: { fontSize: 8, cellPadding: 2 },
     });
 
     doc.save(
@@ -194,17 +243,24 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  barangSelect?.addEventListener("change", (e) => {
-    const idBarang = e.target.value;
-    console.log("Barang dipilih:", idBarang); // Debug log
+  tableBody?.addEventListener("click", (e) => {
+    const target = e.target.closest(".link-kartu-stok");
+    if (target) {
+      e.preventDefault();
+      const barangId = target.dataset.id;
 
-    if (idBarang) {
-      loadKartuStok(idBarang);
-    } else {
-      // Kosongkan tabel jika tidak ada pilihan
-      document.getElementById("kartu-stok-body").innerHTML =
-        '<tr><td colspan="7" class="text-center">Silakan pilih barang untuk melihat riwayat.</td></tr>';
+      const kartuStokTab = new bootstrap.Tab(
+        document.getElementById("kartu-stok-tab")
+      );
+      kartuStokTab.show();
+
+      barangSelect.value = barangId;
+      loadStockCard();
     }
   });
+
+  barangSelect?.addEventListener("change", loadStockCard);
   btnPrintKartuStok?.addEventListener("click", printStockCard);
+
+  loadStockReport();
 });

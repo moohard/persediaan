@@ -29,6 +29,20 @@ function start_secure_session()
     regenerate_session_periodically();
 }
 
+function verify_csrf_token()
+{
+
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']))
+    {
+        // Jika token tidak cocok, hentikan eksekusi dan berikan pesan error.
+        set_flash_message('danger', 'Sesi tidak valid atau telah kedaluwarsa. Silakan coba lagi.');
+        // Redirect kembali ke halaman sebelumnya jika memungkinkan, atau ke dashboard
+        $redirect_url = $_SERVER['HTTP_REFERER'] ?? '/dashboard';
+        header('Location: ' . $redirect_url);
+        exit();
+    }
+}
+
 /**
  * Me-regenerasi ID sesi secara berkala untuk mencegah session fixation.
  */
@@ -208,13 +222,14 @@ function encrypt_id($id)
 
     if ($encryption === NULL)
     {
+        // Pastikan constants sudah terdefinisi
         if (!defined('ENCRYPTION_KEY'))
         {
             error_log("ERROR: ENCRYPTION_KEY constant not defined");
             return FALSE;
         }
-        require_once APP_PATH . '/core/SecureEncryption.php';
-        $encryption = new SecureEncryption(ENCRYPTION_KEY);
+        require_once APP_PATH . '/core/Encryption.php';
+        $encryption = new Encryption(ENCRYPTION_KEY);
     }
 
     if (!is_numeric($id))
@@ -223,37 +238,40 @@ function encrypt_id($id)
         return FALSE;
     }
 
-    return $encryption->encryptId($id);
+    return $encryption->encryptConsistent((string) $id);
 }
 
-function decrypt_id($encrypted_id, $maxAge = 86400)
+function decrypt_id($encrypted_id)
 {
 
     static $encryption = NULL;
 
     if ($encryption === NULL)
     {
+        // Pastikan constants sudah terdefinisi
         if (!defined('ENCRYPTION_KEY'))
         {
             error_log("ERROR: ENCRYPTION_KEY constant not defined");
             return FALSE;
         }
-        require_once APP_PATH . '/core/SecureEncryption.php';
-        $encryption = new SecureEncryption(ENCRYPTION_KEY);
+        require_once APP_PATH . '/core/Encryption.php';
+        $encryption = new Encryption(ENCRYPTION_KEY);
     }
 
-    return $encryption->decryptId($encrypted_id, $maxAge);
+    $decrypted = $encryption->decryptConsistent($encrypted_id);
+    return ($decrypted !== FALSE && is_numeric($decrypted)) ? (int) $decrypted : FALSE;
 }
 
-function validate_encrypted_id($encrypted_id, $maxAge = 86400)
+function validate_encrypted_id($encrypted_id)
 {
 
-    return decrypt_id($encrypted_id, $maxAge) !== FALSE;
+    $decrypted = decrypt_id($encrypted_id);
+    return $decrypted !== FALSE && is_numeric($decrypted);
 }
 
-function get_decrypted_id($encrypted_id, $default = NULL, $maxAge = 86400)
+function get_decrypted_id($encrypted_id, $default = NULL)
 {
 
-    $decrypted = decrypt_id($encrypted_id, $maxAge);
-    return $decrypted !== FALSE ? $decrypted : $default;
+    $decrypted = decrypt_id($encrypted_id);
+    return ($decrypted !== FALSE && is_numeric($decrypted)) ? (int) $decrypted : $default;
 }

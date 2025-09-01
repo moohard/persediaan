@@ -149,11 +149,7 @@ class Permintaan extends Controller
                 {
 
                     $id = decrypt_id($input['id'] ?? NULL);
-                    
-                    echo "<pre>";
-                    print_r ($input['id']);
-                    echo "</pre>";die();
-                    
+
                     $catatan = $input['catatan'] ?? '';
                     $items   = $input['items'] ?? [];
 

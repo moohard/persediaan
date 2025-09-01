@@ -1,11 +1,5 @@
 <?php
 
-require_once 'vendor/autoload.php';
-
-use Defuse\Crypto\Crypto;
-use Defuse\Crypto\Key;
-use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
-
 class SecureEncryption
 {
     private $key;
@@ -16,28 +10,48 @@ class SecureEncryption
             throw new Exception("Encryption key cannot be empty");
         }
         
-        // Convert string key to Defuse Key object
-        try {
-            // Jika key sudah dalam format Defuse Key
-            if (strlen($keyString) === 64 && ctype_xdigit($keyString)) {
-                $this->key = Key::loadFromAsciiSafeString($keyString);
-            } else {
-                // Generate key dari string menggunakan HKDF
-                $this->key = $this->deriveKeyFromString($keyString);
+        // ✅ LAZY LOAD: Load dependencies only when needed
+        if (!class_exists('Defuse\\Crypto\\Crypto')) {
+            if (!file_exists(ROOT_PATH . '/vendor/autoload.php')) {
+                throw new Exception("Composer dependencies not installed");
             }
+            require_once ROOT_PATH . '/vendor/autoload.php';
+        }
+
+        try {
+            $this->key = $this->createKeyFromString($keyString);
         } catch (Exception $e) {
             throw new Exception("Failed to initialize encryption key: " . $e->getMessage());
         }
     }
 
-    private function deriveKeyFromString($password)
+    private function createKeyFromString($keyString)
+    {
+        // ✅ Coba load sebagai Defuse key format dulu
+        if (strlen($keyString) === 64 && ctype_xdigit($keyString)) {
+            try {
+                return \Defuse\Crypto\Key::loadFromAsciiSafeString($keyString);
+            } catch (Exception $e) {
+                // Continue to try as regular string
+            }
+        }
+        
+        // ✅ Jika bukan Defuse key, convert string menjadi Defuse key
+        return $this->convertStringToKey($keyString);
+    }
+
+    private function convertStringToKey($password)
     {
         // Use HKDF to derive a secure key from password
-        $salt = hash('sha256', 'static_salt_' . ENCRYPTION_KEY, true);
-        $info = 'defuse_encryption_key';
+        $salt = hash('sha256', 'static_salt_for_key_derivation', true);
+        $info = 'defuse_encryption_key_derivation';
         
+        // Generate consistent key from password
         $keyMaterial = hash_hkdf('sha256', $password, 32, $info, $salt);
-        return Key::loadFromAsciiSafeString(bin2hex($keyMaterial));
+        
+        // Convert to Defuse key format
+        $hexKey = bin2hex($keyMaterial);
+        return \Defuse\Crypto\Key::loadFromAsciiSafeString($hexKey);
     }
 
     public function encrypt($data)
@@ -47,7 +61,7 @@ class SecureEncryption
         }
 
         try {
-            return Crypto::encrypt((string)$data, $this->key);
+            return \Defuse\Crypto\Crypto::encrypt((string)$data, $this->key);
         } catch (Exception $e) {
             error_log("Encryption failed: " . $e->getMessage());
             return false;
@@ -61,8 +75,8 @@ class SecureEncryption
         }
 
         try {
-            return Crypto::decrypt($ciphertext, $this->key);
-        } catch (WrongKeyOrModifiedCiphertextException $e) {
+            return \Defuse\Crypto\Crypto::decrypt($ciphertext, $this->key);
+        } catch (\Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException $e) {
             error_log("Decryption failed: Invalid key or tampered data");
             return false;
         } catch (Exception $e) {
@@ -109,8 +123,26 @@ class SecureEncryption
         return (int)$data['id'];
     }
 
-    public static function generateKey()
+    public static function generateDefuseKey()
     {
-        return Key::createNewRandomKey()->saveToAsciiSafeString();
+        if (!class_exists('Defuse\\Crypto\\Key')) {
+            require_once ROOT_PATH . '/vendor/autoload.php';
+        }
+        return \Defuse\Crypto\Key::createNewRandomKey()->saveToAsciiSafeString();
+    }
+
+    public static function generateKeyFromString($password)
+    {
+        if (!class_exists('Defuse\\Crypto\\Key')) {
+            require_once ROOT_PATH . '/vendor/autoload.php';
+        }
+        
+        $salt = hash('sha256', 'static_salt_for_key_derivation', true);
+        $info = 'defuse_encryption_key_derivation';
+        
+        $keyMaterial = hash_hkdf('sha256', $password, 32, $info, $salt);
+        $hexKey = bin2hex($keyMaterial);
+        
+        return \Defuse\Crypto\Key::loadFromAsciiSafeString($hexKey)->saveToAsciiSafeString();
     }
 }

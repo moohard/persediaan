@@ -45,8 +45,23 @@ class KeyManager
     public static function generateKey($context = 'default')
     {
 
-        require_once 'vendor/autoload.php';
-        $key = SecureEncryption::generateKey();
+        // ✅ LAZY LOAD: Require hanya ketika needed
+        if (!class_exists('Defuse\\Crypto\\Key'))
+        {
+            if (!file_exists(ROOT_PATH . '/vendor/autoload.php'))
+            {
+                throw new Exception("Composer dependencies not installed. Run 'composer install' first.");
+            }
+            require_once ROOT_PATH . '/vendor/autoload.php';
+        }
+
+        try
+        {
+            $key = \Defuse\Crypto\Key::createNewRandomKey()->saveToAsciiSafeString();
+        } catch (Exception $e)
+        {
+            throw new Exception("Failed to generate encryption key: " . $e->getMessage());
+        }
 
         // Ensure directory exists
         $keyDir = APP_PATH . '/storage/keys';
@@ -57,7 +72,11 @@ class KeyManager
 
         // Save key to file
         $keyPath = $keyDir . "/{$context}.key";
-        file_put_contents($keyPath, $key, LOCK_EX);
+        if (file_put_contents($keyPath, $key, LOCK_EX) === FALSE)
+        {
+            throw new Exception("Failed to save key to: " . $keyPath);
+        }
+
         chmod($keyPath, 0600);
 
         return $key;
@@ -73,6 +92,13 @@ class KeyManager
         // Migrate data encrypted with old key to new key
 
         return $newKey;
+    }
+
+    public static function keyExists($context = 'default')
+    {
+
+        $keyPath = APP_PATH . "/storage/keys/{$context}.key";
+        return file_exists($keyPath);
     }
 
 }

@@ -62,9 +62,11 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
             <div class="card card-tab">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     Laporan Kartu Stok per Barang
-                    <button class="btn btn-sm btn-outline-danger d-none" id="btn-print-kartu-stok">
-                        <i class="bi bi-file-earmark-pdf"></i> Cetak PDF
-                    </button>
+                    <?php if (has_permission('laporan_kartu_stok_print')) : ?>
+                        <button class="btn btn-sm btn-outline-danger d-none" id="btn-print-kartu-stok">
+                            <i class="bi bi-file-earmark-pdf"></i> Cetak PDF
+                        </button>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
@@ -74,27 +76,33 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
                                 <option value="">-- Pilih Barang --</option>
                                 <?php foreach ($barang_list as $barang) : ?>
                                     <option value="<?php echo e($barang['id_barang']); ?>">
-                                        <?php echo e($barang['nama_barang']); ?></option>
+                                        <?php echo e($barang['nama_barang']); ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover" id="kartu-stok-table">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Tanggal</th>
-                                    <th>Jenis Transaksi</th>
-                                    <th>Keterangan</th>
-                                    <th class="text-center">Jumlah Ubah</th>
-                                    <th class="text-center">Stok Awal</th>
-                                    <th class="text-center">Stok Akhir</th>
-                                    <th>Pengguna</th>
+                                    <th rowspan="2" class="align-middle">Tanggal</th>
+                                    <th rowspan="2" class="align-middle">Keterangan</th>
+                                    <th rowspan="2" class="align-middle text-center">Jumlah Ubah</th>
+                                    <th colspan="2" class="text-center">Stok Awal</th>
+                                    <th colspan="2" class="text-center">Stok Akhir</th>
+                                    <th rowspan="2" class="align-middle">Pengguna</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-center">Umum</th>
+                                    <th class="text-center">Perkara</th>
+                                    <th class="text-center">Umum</th>
+                                    <th class="text-center">Perkara</th>
                                 </tr>
                             </thead>
                             <tbody id="kartu-stok-body">
                                 <tr>
-                                    <td colspan="7" class="text-center">Silakan pilih barang untuk melihat riwayat.</td>
+                                    <td colspan="8" class="text-center">Silakan pilih barang untuk melihat riwayat.</td>
                                 </tr>
                             </tbody>
                         </table>
