@@ -132,6 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const loadTrash = async () => {
+    alert("Loading trash data...");
     if (!trashTableBody) return;
     try {
       const response = await apiCall("get", "/barang/api/getTrash");

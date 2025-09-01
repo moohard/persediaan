@@ -75,7 +75,27 @@ function log_query($query, $error = NULL)
     {
         return;
     }
-    // ... (sisa kode log_query tidak berubah)
+    $log_path = ROOT_PATH . '/logs';
+    if (!is_dir($log_path))
+    {
+        mkdir($log_path, 0777, TRUE);
+
+    }
+
+    $log_file  = $log_path . '/query_log_' . date('Y-m-d') . '.log';
+    $timestamp = date('Y-m-d H:i:s');
+
+    $log_message = "[$timestamp]\n";
+    $log_message .= "QUERY: " . trim($query) . "\n";
+    if ($error)
+    {
+
+        $log_message .= "ERROR: " . trim($error) . "\n";
+    }
+    $log_message .= "--------------------------------------------------\n\n";
+
+    // Tulis ke file log
+    file_put_contents($log_file, $log_message, FILE_APPEND);
 }
 
 function e($str)
@@ -102,4 +122,138 @@ function has_permission($permission_name)
         return in_array($permission_name, $_SESSION['permissions']);
     }
     return FALSE;
+}
+
+function validate_email($email)
+{
+
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== FALSE;
+}
+
+function validate_url($url)
+{
+
+    return filter_var($url, FILTER_VALIDATE_URL) !== FALSE;
+}
+
+function sanitize_input($data)
+{
+
+    if (is_array($data))
+    {
+        return array_map('sanitize_input', $data);
+    }
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+}
+
+function generate_random_string($length = 16)
+{
+
+    return bin2hex(random_bytes($length / 2));
+}
+
+function format_date($date, $format = 'd/m/Y H:i')
+{
+
+    if (!$date) return '';
+    $datetime = new DateTime($date);
+    return $datetime->format($format);
+}
+
+function get_client_ip()
+{
+
+    $ipaddress = '';
+    if (isset($_SERVER['HTTP_CLIENT_IP']))
+        $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+    else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    else if (isset($_SERVER['HTTP_X_FORWARDED']))
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+    else if (isset($_SERVER['HTTP_FORWARDED_FOR']))
+        $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+    else if (isset($_SERVER['HTTP_FORWARDED']))
+        $ipaddress = $_SERVER['HTTP_FORWARDED'];
+    else if (isset($_SERVER['REMOTE_ADDR']))
+        $ipaddress = $_SERVER['REMOTE_ADDR'];
+    else
+        $ipaddress = 'UNKNOWN';
+    return $ipaddress;
+}
+
+function is_ajax_request()
+{
+
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+}
+
+function redirect($url, $statusCode = 303)
+{
+
+    header('Location: ' . $url, TRUE, $statusCode);
+    exit();
+}
+
+function array_get($array, $key, $default = NULL)
+{
+
+    return isset($array[$key]) ? $array[$key] : $default;
+}
+
+function encrypt_id($id)
+{
+
+    static $encryption = NULL;
+
+    if ($encryption === NULL)
+    {
+        if (!defined('ENCRYPTION_KEY'))
+        {
+            error_log("ERROR: ENCRYPTION_KEY constant not defined");
+            return FALSE;
+        }
+        require_once APP_PATH . '/core/SecureEncryption.php';
+        $encryption = new SecureEncryption(ENCRYPTION_KEY);
+    }
+
+    if (!is_numeric($id))
+    {
+        error_log("ERROR: encrypt_id requires numeric ID, got: " . gettype($id));
+        return FALSE;
+    }
+
+    return $encryption->encryptId($id);
+}
+
+function decrypt_id($encrypted_id, $maxAge = 86400)
+{
+
+    static $encryption = NULL;
+
+    if ($encryption === NULL)
+    {
+        if (!defined('ENCRYPTION_KEY'))
+        {
+            error_log("ERROR: ENCRYPTION_KEY constant not defined");
+            return FALSE;
+        }
+        require_once APP_PATH . '/core/SecureEncryption.php';
+        $encryption = new SecureEncryption(ENCRYPTION_KEY);
+    }
+
+    return $encryption->decryptId($encrypted_id, $maxAge);
+}
+
+function validate_encrypted_id($encrypted_id, $maxAge = 86400)
+{
+
+    return decrypt_id($encrypted_id, $maxAge) !== FALSE;
+}
+
+function get_decrypted_id($encrypted_id, $default = NULL, $maxAge = 86400)
+{
+
+    $decrypted = decrypt_id($encrypted_id, $maxAge);
+    return $decrypted !== FALSE ? $decrypted : $default;
 }

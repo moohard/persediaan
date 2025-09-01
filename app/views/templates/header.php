@@ -88,7 +88,13 @@
                             <li class="nav-item"><a class="nav-link" href="/barangmasuk"><i class="bi bi-box-arrow-in-down"></i>
                                     Penerimaan Barang</a></li>
                         <?php endif; ?>
-
+                        <?php if (has_permission('laporan_view')) : ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/laporan">
+                                    <i class="bi bi-graph-up"></i> Laporan
+                                </a>
+                            </li>
+                        <?php endif; ?>
                         <?php if (has_permission('user_management_view')) : ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="/pengguna">

@@ -78,12 +78,27 @@ class Barangmasuk_model extends Model
                 $stmt_dbm = $this->db->prepare("INSERT INTO tbl_detail_barang_masuk (id_barang_masuk, id_barang, jumlah_diterima, jumlah_umum, jumlah_perkara) VALUES (?, ?, ?, ?, ?)");
                 $stmt_dbm->bind_param("iiiii", $id_barang_masuk, $id_barang_final, $jumlah_diterima, $alokasi['jumlah_umum'], $alokasi['jumlah_perkara']);
                 $stmt_dbm->execute();
+                $id_detail_masuk = $this->db->insert_id;
 
                 if ($id_barang_final)
                 {
+                    // Dapatkan stok sebelum diubah untuk logging
+                    $stmt_get_stok = $this->db->prepare("SELECT (stok_umum + stok_perkara) as total FROM tbl_barang WHERE id_barang = ?");
+                    $stmt_get_stok->bind_param("i", $id_barang_final);
+                    $stmt_get_stok->execute();
+                    $stok_sebelum = $stmt_get_stok->get_result()->fetch_assoc()['total'] ?? 0;
+
+                    // Update stok
                     $stmt_update_stok = $this->db->prepare("UPDATE tbl_barang SET stok_umum = stok_umum + ?, stok_perkara = stok_perkara + ? WHERE id_barang = ?");
                     $stmt_update_stok->bind_param("iii", $alokasi['jumlah_umum'], $alokasi['jumlah_perkara'], $id_barang_final);
                     $stmt_update_stok->execute();
+
+                    // **[PERBAIKAN] Tambahkan Log Stok Masuk**
+                    $stok_sesudah   = $stok_sebelum + $jumlah_diterima;
+                    $keterangan_log = "Penerimaan barang dari permintaan #" . $id_permintaan;
+                    $stmt_log       = $this->db->prepare("INSERT INTO tbl_log_stok (id_barang, jenis_transaksi, jumlah_ubah, stok_sebelum_total, stok_sesudah_total, id_referensi, keterangan, id_pengguna_aksi) VALUES (?, 'masuk', ?, ?, ?, ?, ?, ?)");
+                    $stmt_log->bind_param("iiiiisi", $id_barang_final, $jumlah_diterima, $stok_sebelum, $stok_sesudah, $id_detail_masuk, $keterangan_log, $user_id);
+                    $stmt_log->execute();
                 }
 
                 // Tandai item permintaan sebagai sudah diterima

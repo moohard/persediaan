@@ -37,7 +37,6 @@ class Permintaan extends Controller
     {
 
         header('Content-Type: application/json');
-
         $is_ajax    = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 
@@ -56,7 +55,9 @@ class Permintaan extends Controller
             case 'getDetail':
                 if (!has_permission('permintaan_view_own') && !has_permission('permintaan_view_all'))
                 {
-                    http_response_code(403); /* ... tolak akses ... */
+                    http_response_code(403);
+
+                    /* ... tolak akses ... */
                     return;
                 }
                 if ($method === 'getAll')
@@ -65,18 +66,32 @@ class Permintaan extends Controller
                     $requests = $this->permintaanModel->getAllRequests($_SESSION['user_id'], $_SESSION['nama_role']);
                     foreach ($requests as &$req)
                     {
-                        $req['id_permintaan_encrypted'] = $this->encryption->encrypt($req['id_permintaan']);
+                        $req['id_permintaan_encrypted'] = encrypt_id($req['id_permintaan']);
                     }
+
                     echo json_encode([ 'success' => TRUE, 'data' => $requests ]);
                 } elseif ($method === 'getDetail')
                 {
-                    $id = $this->encryption->decrypt($param);
-                    if (!$id)
+                    // AMBIL ID DARI PARAMETER PERTAMA
+                    $encryptedId = $param ?? '';
+
+                    if (empty($encryptedId))
+                    {
+                        http_response_code(400);
+                        echo json_encode([ 'success' => FALSE, 'message' => 'ID tidak provided.' ]);
+                        return;
+                    }
+
+                    // Decrypt ID
+                    $id = decrypt_id($encryptedId);
+
+                    if (!$id || !is_numeric($id))
                     {
                         http_response_code(400);
                         echo json_encode([ 'success' => FALSE, 'message' => 'ID tidak valid.' ]);
                         return;
                     }
+
                     $details = $this->permintaanModel->getRequestDetailsById($id);
                     if ($details)
                     {
@@ -132,7 +147,13 @@ class Permintaan extends Controller
                 }
                 if ($method === 'approve')
                 {
-                    $id      = $this->encryption->decrypt($input['id'] ?? NULL);
+
+                    $id = decrypt_id($input['id'] ?? NULL);
+                    
+                    echo "<pre>";
+                    print_r ($input['id']);
+                    echo "</pre>";die();
+                    
                     $catatan = $input['catatan'] ?? '';
                     $items   = $input['items'] ?? [];
 
@@ -147,7 +168,7 @@ class Permintaan extends Controller
                     echo json_encode($result);
                 } elseif ($method === 'reject')
                 {
-                    $id      = $this->encryption->decrypt($input['id'] ?? NULL);
+                    $id      = decrypt_id($input['id'] ?? NULL);
                     $catatan = $input['catatan'] ?? '';
 
                     if (!$id)

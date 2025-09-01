@@ -156,7 +156,7 @@ class Barang extends Controller
                 echo json_encode($result);
                 break;
 
-            case 'getTrash':
+            case 'trash':
             case 'restore':
                 if (!has_permission('barang_trash'))
                 {

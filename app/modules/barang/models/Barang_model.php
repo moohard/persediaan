@@ -76,7 +76,7 @@ class Barang_model extends Model
         }
     }
 
-    public function update($id, $data, $user_id)
+    public function update($id, $data, $user_id=null)
     {
 
         $this->db->begin_transaction();

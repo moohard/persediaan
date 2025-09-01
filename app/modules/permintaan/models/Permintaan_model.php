@@ -120,21 +120,17 @@ class Permintaan_model extends Model
             {
                 throw new Exception("Permintaan tidak ditemukan atau sudah diproses.");
             }
+            $is_permintaan_stok = ($permintaan['tipe_permintaan'] == 'stok');
+            $status_final       = $is_permintaan_stok ? 'Selesai' : 'Diproses Pembelian';
 
-            $status_final = ($permintaan['tipe_permintaan'] == 'pembelian') ? 'Diproses Pembelian' : 'Disetujui';
-
-            // [PERBAIKAN] Logika persetujuan sekarang digeneralisasi untuk menangani
-            // input manual di semua tipe permintaan, dengan validasi yang berbeda.
             foreach ($items as $item)
             {
                 $detail_id        = intval($item['id']);
                 $jumlah_disetujui = intval($item['jumlah']);
 
-                // Ambil detail item dari database untuk validasi
                 $stmt_item_detail = $this->db->prepare("
                     SELECT 
-                        d.jumlah_diminta,
-                        COALESCE((b.stok_umum + b.stok_perkara), 0) as stok_total,
+                        d.id_barang, d.jumlah_diminta, b.stok_umum, b.stok_perkara,
                         COALESCE(b.nama_barang, d.nama_barang_custom) as nama_barang
                     FROM tbl_detail_permintaan_atk d
                     LEFT JOIN tbl_barang b ON d.id_barang = b.id_barang
@@ -144,39 +140,62 @@ class Permintaan_model extends Model
                 $stmt_item_detail->execute();
                 $item_db = $stmt_item_detail->get_result()->fetch_assoc();
 
-                if (!$item_db)
-                {
-                    throw new Exception("Detail item tidak ditemukan.");
-                }
+                if (!$item_db) throw new Exception("Detail item tidak ditemukan.");
 
-                // Validasi 1: Jumlah disetujui tidak boleh melebihi jumlah diminta.
-                if ($jumlah_disetujui > $item_db['jumlah_diminta'])
-                {
-                    throw new Exception("Jumlah disetujui untuk '{$item_db['nama_barang']}' ({$jumlah_disetujui}) tidak boleh melebihi jumlah yang diminta ({$item_db['jumlah_diminta']}).");
-                }
+                $stok_total_db = ($item_db['stok_umum'] ?? 0) + ($item_db['stok_perkara'] ?? 0);
+                if ($jumlah_disetujui > $item_db['jumlah_diminta']) throw new Exception("Jumlah disetujui untuk '{$item_db['nama_barang']}' melebihi jumlah diminta.");
 
-                // Validasi 2: Untuk 'Permintaan Stok', jumlah disetujui tidak boleh melebihi stok total.
-                if ($permintaan['tipe_permintaan'] == 'stok')
+                if ($is_permintaan_stok && $item_db['id_barang'])
                 {
-                    if ($jumlah_disetujui > $item_db['stok_total'])
+                    if ($jumlah_disetujui > $stok_total_db)
                     {
-                        throw new Exception("Jumlah disetujui untuk '{$item_db['nama_barang']}' ({$jumlah_disetujui}) melebihi stok total ({$item_db['stok_total']}).");
+                        throw new Exception("Jumlah disetujui untuk '{$item_db['nama_barang']}' melebihi stok total ({$stok_total_db}).");
+                    }
+
+                    if ($jumlah_disetujui > 0)
+                    {
+                        $stok_sebelum_umum    = $item_db['stok_umum'];
+                        $stok_sebelum_perkara = $item_db['stok_perkara'];
+
+                        $pengurangan_dari_umum    = min($stok_sebelum_umum, $jumlah_disetujui);
+                        $sisa_pengurangan         = $jumlah_disetujui - $pengurangan_dari_umum;
+                        $pengurangan_dari_perkara = min($stok_sebelum_perkara, $sisa_pengurangan);
+
+                        $stmt_reduce_stock = $this->db->prepare("UPDATE tbl_barang SET stok_umum = stok_umum - ?, stok_perkara = stok_perkara - ? WHERE id_barang = ?");
+                        $stmt_reduce_stock->bind_param("iii", $pengurangan_dari_umum, $pengurangan_dari_perkara, $item_db['id_barang']);
+                        $stmt_reduce_stock->execute();
+
+                        $stok_sesudah_umum    = $stok_sebelum_umum - $pengurangan_dari_umum;
+                        $stok_sesudah_perkara = $stok_sebelum_perkara - $pengurangan_dari_perkara;
+                        $keterangan_log       = "Pengeluaran stok untuk permintaan #" . $id;
+                        $stmt_log             = $this->db->prepare("INSERT INTO tbl_log_stok (id_barang, jenis_transaksi, jumlah_ubah, stok_sebelum_umum, stok_sesudah_umum, stok_sebelum_perkara, stok_sesudah_perkara, id_referensi, keterangan, id_pengguna_aksi) VALUES (?, 'keluar', ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt_log->bind_param(
+                            "iiiiiiisi",
+                            $item_db['id_barang'],
+                            -$jumlah_disetujui,
+                            $stok_sebelum_umum,
+                            $stok_sesudah_umum,
+                            $stok_sebelum_perkara,
+                            $stok_sesudah_perkara,
+                            $detail_id,
+                            $keterangan_log,
+                            $approver_id,
+                        );
+                        $stmt_log->execute();
                     }
                 }
 
-                // Update jumlah yang disetujui untuk item ini
                 $stmt_item_update = $this->db->prepare("UPDATE tbl_detail_permintaan_atk SET jumlah_disetujui = ? WHERE id_detail_permintaan = ?");
                 $stmt_item_update->bind_param("ii", $jumlah_disetujui, $detail_id);
                 $stmt_item_update->execute();
             }
 
-            // Update status permintaan utama
             $stmt = $this->db->prepare("UPDATE tbl_permintaan_atk SET status_permintaan = ?, id_pengguna_penyetuju = ?, catatan_penyetuju = ?, tanggal_diproses = NOW() WHERE id_permintaan = ?");
             $stmt->bind_param("sisi", $status_final, $approver_id, $catatan, $id);
             $stmt->execute();
 
             $this->db->commit();
-            return [ 'success' => TRUE, 'message' => 'Permintaan berhasil disetujui.' ];
+            return [ 'success' => TRUE, 'message' => 'Permintaan berhasil diproses.' ];
         } catch (Exception $e)
         {
             $this->db->rollback();
