@@ -42,6 +42,16 @@
 
         .main-header {
             box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+            height: 50px;
+        }
+
+        #notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .navbar-nav .dropdown-menu#notification-list {
+            position: absolute !important;
         }
     </style>
 </head>
@@ -52,16 +62,39 @@
     <?php if (isset($_SESSION['user_id'])) : ?>
         <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow main-header">
             <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">Sistem Persediaan ATK</a>
-            <div class="navbar-nav">
-                <div class="nav-item text-nowrap d-flex align-items-center">
-                    <span class="navbar-text me-3 text-white">
+
+            <div class="navbar-nav ms-auto">
+                <div class="d-flex align-items-center">
+
+                    <?php if (has_permission('notifikasi_view')) : ?>
+                        <div class="dropdown me-3">
+                            <a href="#" class="nav-link text-white" id="notificationDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell-fill"></i>
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                                    id="notification-badge">
+                                    <span id="notification-count">0</span>
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-light"
+                                aria-labelledby="notificationDropdown" id="notification-list" style="width: 350px;">
+                                <li>
+                                    <p class="dropdown-item text-center">Memuat...</p>
+                                </li>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="navbar-text me-3 text-white">
                         Selamat datang, <?php echo e($_SESSION['nama']); ?>!
-                    </span>
+                    </div>
+
                     <a class="nav-link px-3" href="/auth/logout">Logout</a>
+
                 </div>
             </div>
         </header>
-
         <div class="wrapper">
             <nav id="sidebar" class="bg-light">
                 <div class="position-sticky pt-3">

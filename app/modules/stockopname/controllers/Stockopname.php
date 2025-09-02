@@ -55,7 +55,7 @@ class Stockopname extends Controller
                 break;
 
             case 'getLatestStock':
-                
+
                 if ($this->stockOpnameModel->isOpnameFinalizedForCurrentMonth())
                 {
                     echo json_encode([ 'success' => FALSE, 'message' => 'Stock opname untuk bulan ini sudah final dan tidak bisa diulang.' ]);
