@@ -8,6 +8,7 @@ class Pengaturan_model extends Model
     public function clearAllTransactions()
     {
 
+        // [DIUBAH] Tambahkan tabel stock opname ke daftar
         $tables_to_truncate = [
             'tbl_log_stok',
             'tbl_barang_keluar',
@@ -15,24 +16,22 @@ class Pengaturan_model extends Model
             'tbl_barang_masuk',
             'tbl_detail_permintaan_atk',
             'tbl_permintaan_atk',
+            'tbl_detail_stock_opname', // Tabel baru
+            'tbl_stock_opname'         // Tabel baru
         ];
 
         $this->db->begin_transaction();
         try
         {
-            // Nonaktifkan foreign key check sementara
             $this->db->query("SET FOREIGN_KEY_CHECKS=0;");
 
-            // Kosongkan semua tabel transaksi
             foreach ($tables_to_truncate as $table)
             {
                 $this->db->query("TRUNCATE TABLE {$table}");
             }
 
-            // Reset semua stok barang ke 0
             $this->db->query("UPDATE tbl_barang SET stok_umum = 0, stok_perkara = 0");
 
-            // Aktifkan kembali foreign key check
             $this->db->query("SET FOREIGN_KEY_CHECKS=1;");
 
             $this->db->commit();

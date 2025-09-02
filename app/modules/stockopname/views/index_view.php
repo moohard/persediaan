@@ -21,6 +21,7 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
                         <th>Tanggal</th>
                         <th>Penanggung Jawab</th>
                         <th>Keterangan</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="history-table-body">
@@ -31,7 +32,7 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
     </div>
 </div>
 
-<!-- Modal Stock Opname -->
+<!-- Modal Form Stock Opname -->
 <div class="modal fade" id="opname-modal" tabindex="-1" aria-labelledby="opname-modal-label" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -61,9 +62,7 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
                                     <th class="text-center">Perkara</th>
                                 </tr>
                             </thead>
-                            <tbody id="opname-item-list">
-                                <!-- Data dimuat oleh AJAX -->
-                            </tbody>
+                            <tbody id="opname-item-list"></tbody>
                         </table>
                     </div>
                 </form>
@@ -76,4 +75,51 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
     </div>
 </div>
 
+<!-- Modal Detail Stock Opname -->
+<div class="modal fade" id="detail-opname-modal" tabindex="-1" aria-labelledby="detail-opname-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detail-opname-modal-label">Detail Hasil Stock Opname</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detail-opname-info" class="mb-3"></div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm" id="detail-opname-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2" class="align-middle">Nama Barang</th>
+                                <th colspan="2" class="text-center">Stok Sistem</th>
+                                <th colspan="2" class="text-center">Stok Fisik</th>
+                                <th colspan="2" class="text-center">Selisih</th>
+                                <th rowspan="2" class="align-middle">Catatan</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center">Umum</th>
+                                <th class="text-center">Perkara</th>
+                                <th class="text-center">Umum</th>
+                                <th class="text-center">Perkara</th>
+                                <th class="text-center">Umum</th>
+                                <th class="text-center">Perkara</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-opname-item-list"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <?php if (has_permission('stock_opname_print')) : ?>
+                    <button type="button" class="btn btn-danger" id="btn-print-opname"><i
+                            class="bi bi-file-earmark-pdf"></i> Cetak PDF</button>
+                <?php endif; ?>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="<?php echo BASE_URL; ?>/js/plugins/jspdf.umd.min.js"></script>
+<script src="<?php echo BASE_URL; ?>/js/plugins/jspdf.plugin.autotable.min.js"></script>
 <?php require_once APP_PATH . '/views/templates/footer.php'; ?>
