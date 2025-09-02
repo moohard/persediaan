@@ -88,6 +88,10 @@
                             <li class="nav-item"><a class="nav-link" href="/barangmasuk"><i class="bi bi-box-arrow-in-down"></i>
                                     Penerimaan Barang</a></li>
                         <?php endif; ?>
+                        <?php if (has_permission('stock_opname_view')) : ?>
+                            <li class="nav-item"><a class="nav-link" href="/stockopname"><i class="bi bi-clipboard2-check"></i>
+                                    Stock Opname</a></li>
+                        <?php endif; ?>
                         <?php if (has_permission('laporan_view')) : ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="/laporan">
@@ -102,7 +106,10 @@
                                 </a>
                             </li>
                         <?php endif; ?>
-
+                        <?php if (has_permission('role_management_view')) : ?>
+                            <li class="nav-item"><a class="nav-link" href="/hakakses"><i class="bi bi-shield-lock"></i>
+                                    Manajemen Hak Akses</a></li>
+                        <?php endif; ?>
                         <?php if (has_permission('log_view')) : ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="/log">

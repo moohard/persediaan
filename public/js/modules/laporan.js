@@ -1,4 +1,147 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Fungsi generik untuk menangani filter, load data, dan print
+  const setupReportTab = (config) => {
+    const form = document.getElementById(config.formId);
+    const tableBody = document.getElementById(config.tableBodyId);
+    const btnPrint = document.getElementById(config.btnPrintId);
+    let reportData = [];
+
+    const loadReport = async () => {
+      if (!tableBody) return;
+      const params = new URLSearchParams({
+        start_date: document.getElementById(config.startDateId)?.value || "",
+        end_date: document.getElementById(config.endDateId)?.value || "",
+        status: document.getElementById(config.statusId)?.value || "semua",
+      }).toString();
+
+      try {
+        const response = await apiCall("get", `${config.apiUrl}?${params}`);
+        reportData = response.data;
+        tableBody.innerHTML = config.renderTableRows(reportData);
+      } catch (error) {
+        /* Ditangani oleh apiCall */
+      }
+    };
+
+    const printReport = () => {
+      if (reportData.length === 0) {
+        showToast("warning", "Tidak ada data untuk dicetak.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text(config.reportTitle, 14, 22);
+      doc.setFontSize(10);
+      doc.text(
+        `Per Tanggal: ${new Date().toLocaleDateString("id-ID")}`,
+        14,
+        30
+      );
+
+      doc.autoTable({
+        startY: 40,
+        head: [config.tableHeaders],
+        body: config.renderPdfRows(reportData),
+        headStyles: { fillColor: [41, 128, 185] },
+        styles: { fontSize: 8 },
+      });
+      doc.save(
+        `${config.fileNamePrefix}-${new Date().toISOString().slice(0, 10)}.pdf`
+      );
+    };
+
+    form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      loadReport();
+    });
+    btnPrint?.addEventListener("click", printReport);
+    loadReport();
+  };
+
+  // Konfigurasi untuk setiap tab laporan
+  setupReportTab({
+    formId: "filter-permintaan-form",
+    tableBodyId: "laporan-permintaan-body",
+    btnPrintId: "btn-print-permintaan",
+    startDateId: "start-date-permintaan",
+    endDateId: "end-date-permintaan",
+    statusId: "status-permintaan",
+    apiUrl: "/laporan/api/getPermintaanReport",
+    reportTitle: "Laporan Semua Permintaan",
+    fileNamePrefix: "laporan-permintaan",
+    tableHeaders: ["Kode", "Tanggal", "Pemohon", "Tipe", "Status", "Penyetuju"],
+    renderTableRows: (data) => {
+      if (data.length === 0)
+        return '<tr><td colspan="6" class="text-center">Tidak ada data.</td></tr>';
+      return data
+        .map(
+          (item) => `
+                <tr>
+                    <td>${e(item.kode_permintaan)}</td>
+                    <td>${new Date(item.tanggal_permintaan).toLocaleDateString(
+                      "id-ID"
+                    )}</td>
+                    <td>${e(item.nama_pemohon)}</td>
+                    <td>${e(item.tipe_permintaan)}</td>
+                    <td>${e(item.status_permintaan)}</td>
+                    <td>${e(item.nama_penyetuju) || "-"}</td>
+                </tr>
+            `
+        )
+        .join("");
+    },
+    renderPdfRows: (data) =>
+      data.map((item) => [
+        item.kode_permintaan,
+        new Date(item.tanggal_permintaan).toLocaleDateString("id-ID"),
+        item.nama_pemohon,
+        item.tipe_permintaan,
+        item.status_permintaan,
+        item.nama_penyetuju || "-",
+      ]),
+  });
+
+  setupReportTab({
+    formId: "filter-pembelian-form",
+    tableBodyId: "laporan-pembelian-body",
+    btnPrintId: "btn-print-pembelian",
+    startDateId: "start-date-pembelian",
+    endDateId: "end-date-pembelian",
+    statusId: "status-pembelian",
+    apiUrl: "/laporan/api/getPembelianReport",
+    reportTitle: "Laporan Permintaan Pembelian",
+    fileNamePrefix: "laporan-pembelian",
+    tableHeaders: ["Kode", "Tanggal", "Pemohon", "Status", "Penyetuju"],
+    renderTableRows: (data) => {
+      if (data.length === 0)
+        return '<tr><td colspan="5" class="text-center">Tidak ada data.</td></tr>';
+      return data
+        .map(
+          (item) => `
+                <tr>
+                    <td>${e(item.kode_permintaan)}</td>
+                    <td>${new Date(item.tanggal_permintaan).toLocaleDateString(
+                      "id-ID"
+                    )}</td>
+                    <td>${e(item.nama_pemohon)}</td>
+                    <td>${e(item.status_permintaan)}</td>
+                    <td>${e(item.nama_penyetuju) || "-"}</td>
+                </tr>
+            `
+        )
+        .join("");
+    },
+    renderPdfRows: (data) =>
+      data.map((item) => [
+        item.kode_permintaan,
+        new Date(item.tanggal_permintaan).toLocaleDateString("id-ID"),
+        item.nama_pemohon,
+        item.status_permintaan,
+        item.nama_penyetuju || "-",
+      ]),
+  });
   const tableBody = document.getElementById("laporan-stok-body");
   const btnPrint = document.getElementById("btn-print-stok");
   let reportData = [];

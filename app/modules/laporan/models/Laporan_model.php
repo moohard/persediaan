@@ -46,4 +46,72 @@ class Laporan_model extends Model
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
+    private function applyDateFilter($query, $filters)
+    {
+
+        $params = [];
+        $types  = '';
+        if (!empty($filters['start_date']))
+        {
+            $query .= " AND p.tanggal_permintaan >= ?";
+            $params[] = $filters['start_date'];
+            $types .= 's';
+        }
+        if (!empty($filters['end_date']))
+        {
+            $query .= " AND p.tanggal_permintaan <= ?";
+            $params[] = $filters['end_date'];
+            $types .= 's';
+        }
+        return [ 'query' => $query, 'params' => $params, 'types' => $types ];
+    }
+
+    public function getPermintaanReport($filters)
+    {
+
+        $query = "SELECT * FROM v_permintaan_lengkap p WHERE 1=1";
+
+        if (!empty($filters['status']) && $filters['status'] !== 'semua')
+        {
+            $query .= " AND p.status_permintaan = '" . $this->db->real_escape_string($filters['status']) . "'";
+        }
+
+        $dateFilter = $this->applyDateFilter($query, $filters);
+        $query      = $dateFilter['query'];
+
+        $query .= " ORDER BY p.tanggal_permintaan DESC";
+
+        $stmt = $this->db->prepare($query);
+        if (!empty($dateFilter['params']))
+        {
+            $stmt->bind_param($dateFilter['types'], ...$dateFilter['params']);
+        }
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getPembelianReport($filters)
+    {
+
+        $query = "SELECT * FROM v_permintaan_lengkap p WHERE p.tipe_permintaan = 'pembelian'";
+
+        if (!empty($filters['status']) && $filters['status'] !== 'semua')
+        {
+            $query .= " AND p.status_permintaan = '" . $this->db->real_escape_string($filters['status']) . "'";
+        }
+
+        $dateFilter = $this->applyDateFilter($query, $filters);
+        $query      = $dateFilter['query'];
+
+        $query .= " ORDER BY p.tanggal_permintaan DESC";
+
+        $stmt = $this->db->prepare($query);
+        if (!empty($dateFilter['params']))
+        {
+            $stmt->bind_param($dateFilter['types'], ...$dateFilter['params']);
+        }
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
 }

@@ -18,6 +18,18 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
                 type="button" role="tab">Kartu Stok</button>
         </li>
     <?php endif; ?>
+    <?php if (has_permission('laporan_permintaan_view')) : ?>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="permintaan-tab" data-bs-toggle="tab" data-bs-target="#permintaan-pane"
+                type="button" role="tab">Lap. Permintaan</button>
+        </li>
+    <?php endif; ?>
+    <?php if (has_permission('laporan_pembelian_view')) : ?>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pembelian-tab" data-bs-toggle="tab" data-bs-target="#pembelian-pane" type="button"
+                role="tab">Lap. Pembelian</button>
+        </li>
+    <?php endif; ?>
 </ul>
 
 <!-- Konten Tab -->
@@ -111,7 +123,98 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
             </div>
         </div>
     <?php endif; ?>
+    <!-- Tab Laporan Permintaan -->
+    <?php if (has_permission('laporan_permintaan_view')) : ?>
+        <div class="tab-pane fade" id="permintaan-pane" role="tabpanel">
+            <div class="card card-tab">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    Laporan Semua Permintaan
+                    <button class="btn btn-sm btn-outline-danger" id="btn-print-permintaan"><i
+                            class="bi bi-file-earmark-pdf"></i> Cetak PDF</button>
+                </div>
+                <div class="card-body">
+                    <form id="filter-permintaan-form" class="row g-3 mb-3">
+                        <div class="col-md-4"><label>Dari Tanggal:</label><input type="date" class="form-control"
+                                id="start-date-permintaan"></div>
+                        <div class="col-md-4"><label>Sampai Tanggal:</label><input type="date" class="form-control"
+                                id="end-date-permintaan"></div>
+                        <div class="col-md-3"><label>Status:</label><select class="form-select" id="status-permintaan">
+                                <option value="semua">Semua Status</option>
+                                <option>Diajukan</option>
+                                <option>Disetujui</option>
+                                <option>Ditolak</option>
+                                <option>Selesai</option>
+                                <option>Diproses Pembelian</option>
+                                <option>Sudah Dibeli</option>
+                            </select></div>
+                        <div class="col-md-1 d-flex align-items-end"><button type="submit"
+                                class="btn btn-primary w-100">Filter</button></div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="laporan-permintaan-table">
+                            <thead>
+                                <tr>
+                                    <th>Kode</th>
+                                    <th>Tanggal</th>
+                                    <th>Pemohon</th>
+                                    <th>Tipe</th>
+                                    <th>Status</th>
+                                    <th>Penyetuju</th>
+                                </tr>
+                            </thead>
+                            <tbody id="laporan-permintaan-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
+    <!-- Tab Laporan Pembelian -->
+    <?php if (has_permission('laporan_pembelian_view')) : ?>
+        <div class="tab-pane fade" id="pembelian-pane" role="tabpanel">
+            <div class="card card-tab">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    Laporan Permintaan Pembelian
+                    <button class="btn btn-sm btn-outline-danger" id="btn-print-pembelian"><i
+                            class="bi bi-file-earmark-pdf"></i> Cetak PDF</button>
+                </div>
+                <div class="card-body">
+                    <form id="filter-pembelian-form" class="row g-3 mb-3">
+                        <div class="col-md-4"><label>Dari Tanggal:</label><input type="date" class="form-control"
+                                id="start-date-pembelian"></div>
+                        <div class="col-md-4"><label>Sampai Tanggal:</label><input type="date" class="form-control"
+                                id="end-date-pembelian"></div>
+                        <div class="col-md-3"><label>Status:</label><select class="form-select" id="status-pembelian">
+                                <option value="semua">Semua Status</option>
+                                <option>Diajukan</option>
+                                <option>Disetujui</option>
+                                <option>Ditolak</option>
+                                <option>Selesai</option>
+                                <option>Diproses Pembelian</option>
+                                <option>Sudah Dibeli</option>
+                            </select></div>
+                        <div class="col-md-1 d-flex align-items-end"><button type="submit"
+                                class="btn btn-primary w-100">Filter</button></div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="laporan-pembelian-table">
+                            <thead>
+                                <tr>
+                                    <th>Kode</th>
+                                    <th>Tanggal</th>
+                                    <th>Pemohon</th>
+                                    <th>Status</th>
+                                    <th>Penyetuju</th>
+                                </tr>
+                            </thead>
+                            <tbody id="laporan-pembelian-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <style>

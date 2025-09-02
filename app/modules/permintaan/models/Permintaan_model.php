@@ -168,11 +168,11 @@ class Permintaan_model extends Model
                         $stok_sesudah_umum    = $stok_sebelum_umum - $pengurangan_dari_umum;
                         $stok_sesudah_perkara = $stok_sebelum_perkara - $pengurangan_dari_perkara;
                         $keterangan_log       = "Pengeluaran stok untuk permintaan #" . $id;
-                        $stmt_log             = $this->db->prepare("INSERT INTO tbl_log_stok (id_barang, jenis_transaksi, jumlah_ubah, stok_sebelum_umum, stok_sesudah_umum, stok_sebelum_perkara, stok_sesudah_perkara, id_referensi, keterangan, id_pengguna_aksi) VALUES (?, 'keluar', ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt_log             = $this->db->prepare("INSERT INTO tbl_log_stok (id_barang, jenis_transaksi, jumlah_ubah, stok_sebelum_umum, stok_sesudah_umum, stok_sebelum_perkara, stok_sesudah_perkara, id_referensi, keterangan, id_pengguna_aksi) VALUES (?, 'keluar', -?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt_log->bind_param(
                             "iiiiiiisi",
                             $item_db['id_barang'],
-                            -$jumlah_disetujui,
+                            $jumlah_disetujui,
                             $stok_sebelum_umum,
                             $stok_sesudah_umum,
                             $stok_sebelum_perkara,
