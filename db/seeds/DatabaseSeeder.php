@@ -207,4 +207,21 @@ class DatabaseSeeder extends AbstractSeed
                 'deskripsi' => 'Nama aplikasi yang ditampilkan di header.'
             ],
             [
-                'pengaturan_key' =>
+                'pengaturan_key' => 'ITEMS_PER_PAGE',
+                'pengaturan_value' => '10',
+                'deskripsi' => 'Jumlah item yang ditampilkan per halaman pada tabel.'
+            ],
+            [
+                'pengaturan_key' => 'NAMA_PENANDATANGAN',
+                'pengaturan_value' => 'Nama Kasubbag Umum & Keuangan',
+                'deskripsi' => 'Nama lengkap yang akan menandatangani laporan.'
+            ],
+            [
+                'pengaturan_key' => 'NIP_PENANDATANGAN',
+                'pengaturan_value' => '123456789012345678',
+                'deskripsi' => 'NIP yang akan menandatangani laporan.'
+            ]
+        ];
+        $this->table('tbl_pengaturan')->insert($pengaturan)->save();
+    }
+}
