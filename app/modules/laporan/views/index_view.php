@@ -5,7 +5,9 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3><?php echo e($title); ?></h3>
 </div>
-
+<div id="signature-data" data-nama="<?php echo e($nama_penandatangan); ?>"
+    data-nip="<?php echo e($nip_penandatangan); ?>" style="display: none;">
+</div>
 <!-- Navigasi Tab -->
 <ul class="nav nav-tabs" id="laporanTab" role="tablist">
     <li class="nav-item" role="presentation">
@@ -34,7 +36,6 @@ require_once APP_PATH . '/views/templates/header.php'; ?>
 
 <!-- Konten Tab -->
 <div class="tab-content" id="laporanTabContent">
-
     <!-- Tab Laporan Stok -->
     <div class="tab-pane fade show active" id="stok-barang-pane" role="tabpanel">
         <div class="card card-tab">

@@ -46,6 +46,25 @@ document.addEventListener("DOMContentLoaded", () => {
         body: config.renderPdfRows(reportData),
         headStyles: { fillColor: [41, 128, 185] },
         styles: { fontSize: 8 },
+        didDrawPage: function (data) {
+          // [FITUR BARU] Tambahkan bagian tanda tangan di akhir halaman
+          const signatureData =
+            document.getElementById("signature-data").dataset;
+          const pageCount = doc.internal.getNumberOfPages();
+
+          // Hanya tambahkan di halaman terakhir
+          if (data.pageNumber === pageCount) {
+            const finalY = data.cursor.y + 15; // Posisi Y setelah tabel
+            doc.setFontSize(10);
+            doc.text("Mengetahui,", 140, finalY);
+            doc.text("Kasubbag Umum dan Keuangan,", 140, finalY + 5);
+
+            doc.text(signatureData.nama, 140, finalY + 25);
+            doc.setLineWidth(0.1);
+            doc.line(140, finalY + 26, 200, finalY + 26);
+            doc.text(`NIP. ${signatureData.nip}`, 140, finalY + 30);
+          }
+        },
       });
       doc.save(
         `${config.fileNamePrefix}-${new Date().toISOString().slice(0, 10)}.pdf`
@@ -231,6 +250,23 @@ document.addEventListener("DOMContentLoaded", () => {
         6: { halign: "center" },
         7: { halign: "center" },
       },
+      didDrawPage: function (data) {
+        // [FITUR BARU] Tambahkan bagian tanda tangan di akhir halaman
+        const signatureData = document.getElementById("signature-data").dataset;
+        const pageCount = doc.internal.getNumberOfPages();
+        // Hanya tambahkan di halaman terakhir
+        if (data.pageNumber === pageCount) {
+          const finalY = data.cursor.y + 15; // Posisi Y setelah tabel
+          doc.setFontSize(10);
+          doc.text("Mengetahui,", 140, finalY);
+          doc.text("Kasubbag Umum dan Keuangan,", 140, finalY + 5);
+
+          doc.text(signatureData.nama, 140, finalY + 25);
+          doc.setLineWidth(0.1);
+          doc.line(140, finalY + 26, 200, finalY + 26);
+          doc.text(`NIP. ${signatureData.nip}`, 140, finalY + 30);
+        }
+      },
     });
     doc.save(
       `laporan-stok-barang-${new Date().toISOString().slice(0, 10)}.pdf`
@@ -377,6 +413,24 @@ document.addEventListener("DOMContentLoaded", () => {
       ]),
       headStyles: { fillColor: [41, 128, 185], halign: "center" },
       styles: { fontSize: 8, cellPadding: 2 },
+      didDrawPage: function (data) {
+        // [FITUR BARU] Tambahkan bagian tanda tangan di akhir halaman
+        const signatureData = document.getElementById("signature-data").dataset;
+        const pageCount = doc.internal.getNumberOfPages();
+
+        // Hanya tambahkan di halaman terakhir
+        if (data.pageNumber === pageCount) {
+          const finalY = data.cursor.y + 15; // Posisi Y setelah tabel
+          doc.setFontSize(10);
+          doc.text("Mengetahui,", 140, finalY);
+          doc.text("Kasubbag Umum dan Keuangan,", 140, finalY + 5);
+
+          doc.text(signatureData.nama, 140, finalY + 25);
+          doc.setLineWidth(0.1);
+          doc.line(140, finalY + 26, 200, finalY + 26);
+          doc.text(`NIP. ${signatureData.nip}`, 140, finalY + 30);
+        }
+      },
     });
 
     doc.save(

@@ -1,0 +1,1 @@
+csrf_token|s:64:"db80c6f611b13a2d8f81dd07d4d923d6022ebffd41b8c759d17b5dd5956dc92c";last_regen|i:1756911244;user_id|i:3;nama|s:13:"Pegawai Staff";id_role|i:4;nama_role|s:7:"Pegawai";permissions|a:2:{i:0;s:19:"permintaan_view_own";i:1;s:17:"permintaan_create";}

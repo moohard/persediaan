@@ -21,10 +21,14 @@ class Laporan extends Controller
     public function index()
     {
 
-        $data['title']       = 'Laporan';
-        $data['js_module']   = 'laporan';
-        $barangModel         = $this->model('barang', 'Barang_model');
-        $data['barang_list'] = $barangModel->getAllActive();
+        $barangModel     = $this->model('barang', 'Barang_model');
+        $pengaturanModel = $this->model('pengaturan', 'Pengaturan_model');
+
+        $data['title']              = 'Laporan';
+        $data['js_module']          = 'laporan';
+        $data['barang_list']        = $barangModel->getAllActive();
+        $data['nama_penandatangan'] = $pengaturanModel->getSetting('NAMA_PENANDATANGAN');
+        $data['nip_penandatangan']  = $pengaturanModel->getSetting('NIP_PENANDATANGAN');
         $this->view('laporan', 'index_view', $data);
     }
 

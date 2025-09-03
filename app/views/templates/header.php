@@ -6,54 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($title) ? e($title) . ' - Sistem Persediaan' : 'Sistem Persediaan'; ?></title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    <link href="<?php echo BASE_URL; ?>/css/plugins/bootstrap.min.css" rel="stylesheet"
         xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
-    <style>
-        body {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-            background-color: #f8f9fa;
-        }
-
-        .wrapper {
-            display: flex;
-            width: 100%;
-            flex: 1;
-        }
-
-        #sidebar {
-            min-width: 250px;
-            max-width: 250px;
-            background: #f8f9fa;
-            transition: all 0.3s;
-            box-shadow: 1px 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        #content {
-            width: 100%;
-            padding: 20px;
-            min-height: 100vh;
-            transition: all 0.3s;
-        }
-
-        .main-header {
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-            height: 50px;
-        }
-
-        #notification-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .navbar-nav .dropdown-menu#notification-list {
-            position: absolute !important;
-        }
-    </style>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/plugins/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/plugins/sweetalert2.min.css">
+<link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/style.css">
 </head>
 
 <body data-user-role="<?php echo isset($_SESSION['nama_role']) ? e($_SESSION['nama_role']) : ''; ?>"
