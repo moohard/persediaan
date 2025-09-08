@@ -15,12 +15,11 @@ class Permintaan_model extends Model
             FROM tbl_permintaan_atk p
             JOIN tbl_pengguna u ON p.id_pengguna_pemohon = u.id_pengguna
         ";
-        if ($role === 'pegawai')
+        if (strtolower($role) === 'pegawai')
         {
             $query .= " WHERE p.id_pengguna_pemohon = " . intval($user_id);
         }
         $query .= " ORDER BY p.tanggal_permintaan DESC, p.id_permintaan DESC";
-
         return $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
     }
 

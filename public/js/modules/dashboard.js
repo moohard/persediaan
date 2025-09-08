@@ -1,70 +1,73 @@
 document.addEventListener("DOMContentLoaded", () => {
   const usageChartCanvas = document.getElementById("usageChart");
 
-  // Pastikan kita berada di halaman dashboard sebelum melanjutkan
   if (!usageChartCanvas) {
-    return;
+    return; // Keluar jika tidak di halaman dashboard admin/pimpinan
   }
 
-  /**
-   * Fungsi untuk memuat data dan merender grafik.
-   */
-  const renderUsageChart = async () => {
-    try {
-      // Di masa depan, Anda bisa mengganti ini dengan panggilan API:
-      // const response = await apiCall('get', '/dashboard/api/getUsageData');
-      // const chartData = response.data;
+  let myChart; // Variabel untuk menyimpan instance Chart
 
-      // Untuk saat ini, kita gunakan data dummy
-      const chartData = {
-        labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"],
-        values: [65, 59, 80, 81, 56, 55],
-      };
+  const renderChart = (chartData) => {
+    const ctx = usageChartCanvas.getContext("2d");
 
-      const ctx = usageChartCanvas.getContext("2d");
+    // Hancurkan chart lama jika ada, untuk pembaruan data
+    if (myChart) {
+      myChart.destroy();
+    }
 
-      // Pastikan Chart.js sudah dimuat sebelum digunakan
-      if (typeof Chart === "undefined") {
-        console.error(
-          "Chart.js tidak dimuat. Pastikan sudah di-include di view."
-        );
-        usageChartCanvas.parentElement.innerHTML =
-          '<p class="text-danger">Gagal memuat library grafik.</p>';
-        return;
-      }
-
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: chartData.labels,
-          datasets: [
-            {
-              label: "Jumlah Barang Keluar",
-              data: chartData.values,
-              backgroundColor: "rgba(54, 162, 235, 0.5)",
-              borderColor: "rgba(54, 162, 235, 1)",
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
+    myChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: chartData.labels,
+        datasets: [
+          {
+            label: "Jumlah Barang Keluar",
+            data: chartData.values,
+            backgroundColor: "rgba(54, 162, 235, 0.5)",
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 10, // Atur skala Y
             },
           },
         },
-      });
+      },
+    });
+  };
+
+  const loadDashboardData = async () => {
+    try {
+      const response = await apiCall("get", "/dashboard/api/getStats");
+      const stats = response.data;
+console.log(stats);
+      // Update kartu ringkasan
+      document.getElementById("total-barang").textContent =
+        stats.summary.total_barang;
+      document.getElementById("permintaan-bulan-ini").textContent =
+        stats.summary.permintaan_bulan_ini;
+      document.getElementById("stok-kritis").textContent =
+        stats.summary.stok_kritis;
+
+      // Render grafik dengan data dinamis
+      renderChart(stats.chart);
     } catch (error) {
-      console.error("Gagal merender grafik:", error);
-      // Tampilkan pesan error di tempat grafik jika gagal
+      console.error("Gagal memuat data dashboard:", error);
+      document.getElementById("summary-cards").innerHTML =
+        '<p class="text-danger">Gagal memuat data ringkasan.</p>';
       usageChartCanvas.parentElement.innerHTML =
         '<p class="text-danger">Gagal memuat data grafik.</p>';
     }
   };
 
-  // Panggil fungsi untuk merender grafik
-  renderUsageChart();
+  // Panggil fungsi untuk memuat data saat halaman dimuat
+  loadDashboardData();
 });

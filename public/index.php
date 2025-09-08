@@ -41,7 +41,14 @@ define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
 define('DB_NAME', $_ENV['DB_NAME'] ?? '');
 define('DB_USER', $_ENV['DB_USER'] ?? 'root');
 define('DB_PASS', $_ENV['DB_PASS'] ?? '');
-
+define('MAX_LOGIN_ATTEMPTS', $_ENV['MAX_LOGIN_ATTEMPTS'] ?? 5);
+define('LOCKOUT_TIME', $_ENV['LOCKOUT_TIME'] ?? 300);
+$sessionPath = ROOT_PATH . '/app/sessions';
+if (!is_dir($sessionPath))
+{
+    mkdir($sessionPath, 0777, TRUE);
+}
+session_save_path($sessionPath);
 // Pengaturan Error Reporting
 if (ENVIRONMENT === 'development')
 {
