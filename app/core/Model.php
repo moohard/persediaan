@@ -14,8 +14,7 @@ class Model
     protected function connectDatabase()
     {
         try {
-            $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-            
+            $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
             if ($this->db->connect_error) {
                 throw new Exception("Koneksi database gagal: " . $this->db->connect_error);
             }

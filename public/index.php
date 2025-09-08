@@ -41,6 +41,7 @@ define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
 define('DB_NAME', $_ENV['DB_NAME'] ?? '');
 define('DB_USER', $_ENV['DB_USER'] ?? 'root');
 define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_PORT', $_ENV['DB_PORT'] ?? 3306);
 define('MAX_LOGIN_ATTEMPTS', $_ENV['MAX_LOGIN_ATTEMPTS'] ?? 5);
 define('LOCKOUT_TIME', $_ENV['LOCKOUT_TIME'] ?? 300);
 $sessionPath = ROOT_PATH . '/app/sessions';

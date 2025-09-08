@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           window.location.href = response.redirect_url;
         }, 1000);
+      } else {
+        showToast("error", response.message);
       }
     } catch (error) {
       console.log(error);
