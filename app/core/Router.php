@@ -181,7 +181,6 @@ class Router
 
     protected function handleNotFound()
     {
-
         http_response_code(404);
         if ($this->isAjaxRequest())
         {

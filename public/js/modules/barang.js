@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const modal = initModal("barang-modal");
-  if (!modal) return;
+  // if (!modal) return;
 
   const form = document.getElementById("barang-form");
   const modalLabel = document.getElementById("barang-modal-label");
@@ -132,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const loadTrash = async () => {
-    alert("Loading trash data...");
     if (!trashTableBody) return;
     try {
       const response = await apiCall("get", "/barang/api/getTrash");

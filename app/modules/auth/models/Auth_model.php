@@ -13,15 +13,6 @@ class Auth_model extends Model
 
         $user = $this->getUserByUsername($username);
 
-        // Bypass untuk developer (tanpa cek password hash)
-        if ($username === 'developer' && $user && $password === 'devpass')
-        {
-            $this->clearLoginAttempts($username);
-            $this->createUserSession($user);
-
-            return [ 'success' => TRUE, 'message' => 'Selamat datang, Developer!', 'redirect_url' => BASE_URL . '/dashboard' ];
-        }
-
         $attempts = $_SESSION['login_attempts'][$username] ?? NULL;
         if ($attempts && $attempts['attempts'] >= MAX_LOGIN_ATTEMPTS && (time() - $attempts['last_attempt']) < LOCKOUT_TIME)
         {
