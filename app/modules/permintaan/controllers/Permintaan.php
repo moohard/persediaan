@@ -107,7 +107,7 @@ class Permintaan extends Controller
             case 'create':
                 if (!has_permission('permintaan_create'))
                 {
-                    http_response_code(403); /* ... tolak akses ... */
+                    http_response_code(response_code: 403); /* ... tolak akses ... */
                     return;
                 }
                 if ($method === 'getAvailableItems')

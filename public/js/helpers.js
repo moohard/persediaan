@@ -3,6 +3,7 @@ const apiCall = async (method, url, data = {}) => {
     const response = await axios[method](url, data);
     return response.data;
   } catch (error) {
+    console.log(error.response?.data)
     // Menampilkan pesan error yang lebih informatif
     const errorMessage =
       error.response?.data?.message || "Terjadi kesalahan tidak terduga.";

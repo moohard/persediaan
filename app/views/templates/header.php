@@ -76,7 +76,7 @@
 
                         <?php if (has_permission('barangmasuk_process')) : ?>
                             <li class="nav-item"><a class="nav-link" href="/barangmasuk"><i class="bi bi-box-arrow-in-down"></i>
-                                    Penerimaan Barang</a></li>
+                                    Barang Masuk</a></li>
                         <?php endif; ?>
                         <?php if (has_permission('stock_opname_view')) : ?>
                             <li class="nav-item"><a class="nav-link" href="/stockopname"><i class="bi bi-clipboard2-check"></i>
