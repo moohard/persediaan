@@ -6,19 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($title) ? e($title) . ' - Sistem Persediaan' : 'Sistem Persediaan'; ?></title>
 
-    <link href="<?php echo BASE_URL; ?>/css/plugins/bootstrap.min.css" rel="stylesheet"
-        xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="<?php echo BASE_URL; ?>/css/plugins/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/plugins/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/plugins/sweetalert2.min.css">
-<link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/style.css">
 </head>
 
 <body data-user-role="<?php echo isset($_SESSION['nama_role']) ? e($_SESSION['nama_role']) : ''; ?>"
     data-permissions='<?php echo isset($_SESSION['permissions']) ? json_encode($_SESSION['permissions']) : '[]'; ?>'>
 
     <?php if (isset($_SESSION['user_id'])) : ?>
-        <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow main-header">
-            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">Sistem Persediaan ATK</a>
+        <header class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow main-header">
+            <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#" style="color: var(--secondary-color);">
+                <i class="bi bi-box-seam me-2"></i>Sistem ATK
+            </a>
+
+            <button class="navbar-toggler d-md-none position-absolute d-md-none collapsed" type="button" id="sidebarToggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
             <div class="navbar-nav ms-auto">
                 <div class="d-flex align-items-center">
@@ -27,7 +32,7 @@
                         <div class="dropdown me-3">
                             <a href="#" class="nav-link text-white" id="notificationDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-bell-fill"></i>
+                                <i class="bi bi-bell-fill" style="color: var(--secondary-color);"></i>
                                 <span
                                     class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
                                     id="notification-badge">
@@ -44,16 +49,16 @@
                     <?php endif; ?>
 
                     <div class="navbar-text me-3 text-white">
-                        Selamat datang, <?php echo e($_SESSION['nama']); ?>!
+                        Selamat datang, <span style="color: var(--secondary-color);"><?php echo e($_SESSION['nama']); ?></span>!
                     </div>
 
-                    <a class="nav-link px-3" href="/auth/logout">Logout</a>
+                    <a class="nav-link px-3 text-white" href="/auth/logout"><i class="bi bi-box-arrow-right"></i></a>
 
                 </div>
             </div>
         </header>
         <div class="wrapper">
-            <nav id="sidebar" class="bg-light">
+            <nav id="sidebar">
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
                         <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i>
@@ -129,5 +134,5 @@
                     </div>
                 <?php endif; ?>
             <?php else : ?>
-                <main class="container mt-5">
+                <main class="container-fluid p-0">
                 <?php endif; ?>

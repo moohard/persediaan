@@ -14,13 +14,25 @@
             <form id="login-form">
                 <div class="mb-4 input-icon">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required
-                        placeholder="Masukkan username Anda">
+                    <div class="input-group">
+                        <span class="input-group-text"
+                            style="background: rgba(0, 133, 133, 0.1); border-color: var(--glass-border);">
+                            <i class="bi bi-person" style="color: var(--primary-color);"></i>
+                        </span>
+                        <input type="text" class="form-control" id="username" name="username" required
+                            placeholder="Masukkan username Anda">
+                    </div>
                 </div>
                 <div class="mb-4 input-icon">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required
-                        placeholder="Masukkan password Anda">
+                    <div class="input-group">
+                        <span class="input-group-text"
+                            style="background: rgba(0, 133, 133, 0.1); border-color: var(--glass-border);">
+                            <i class="bi bi-lock" style="color: var(--primary-color);"></i>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="password" required
+                            placeholder="Masukkan password Anda">
+                    </div>
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-login text-white">
@@ -31,7 +43,7 @@
         </div>
     </div>
     <div class="copyright">
-        &copy; 2023 Sistem Monitoring ATK. All rights reserved.
+        &copy; 2025 Sistem Monitoring ATK. All rights reserved.
     </div>
 </div>
 <?php require_once APP_PATH . '/views/templates/footer.php'; ?>
